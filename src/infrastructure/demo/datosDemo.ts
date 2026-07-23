@@ -43,10 +43,10 @@ export interface EstadoDemo {
 }
 
 export const USUARIOS_DEMO: Usuario[] = [
-  { id: 'u-01', nombre: 'Brenda Gamio Fernández', email: 'farmaceutico@demo.pe', rol: 'farmaceutico' },
-  { id: 'u-02', nombre: 'Diego Soto Quispe', email: 'admin@demo.pe', rol: 'administrador' },
-  { id: 'u-03', nombre: 'María Ccahuana Ríos', email: 'tecnico@demo.pe', rol: 'tecnico' },
-  { id: 'u-04', nombre: 'Jorge Villanueva Paz', email: 'jorge.villanueva@demo.pe', rol: 'tecnico' },
+  { id: 'u-01', nombre: 'Brenda Gamio Fernández', email: 'farmaceutico@demo.pe', rol: 'farmaceutico', is_active: true, motivo_desactivacion: null, desactivado_en: null },
+  { id: 'u-02', nombre: 'Diego Soto Quispe', email: 'admin@demo.pe', rol: 'administrador', is_active: true, motivo_desactivacion: null, desactivado_en: null },
+  { id: 'u-03', nombre: 'María Ccahuana Ríos', email: 'tecnico@demo.pe', rol: 'tecnico', is_active: true, motivo_desactivacion: null, desactivado_en: null },
+  { id: 'u-04', nombre: 'Jorge Villanueva Paz', email: 'jorge.villanueva@demo.pe', rol: 'tecnico', is_active: true, motivo_desactivacion: null, desactivado_en: null },
 ]
 
 const DIA_MS = 24 * 60 * 60 * 1000

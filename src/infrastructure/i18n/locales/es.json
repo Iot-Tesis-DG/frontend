@@ -33,6 +33,8 @@
     "reportes": "Reportes",
     "auditoria": "Auditoría",
     "usuarios": "Usuarios",
+    "dispositivos": "Dispositivos",
+    "firmware": "Firmware / OTA",
     "cerrarSesion": "Cerrar sesión",
     "abrirMenu": "Abrir menú",
     "seccionOperacion": "Operación",
@@ -162,7 +164,11 @@
     "selloAyuda": "Huella criptográfica SHA-256: encadena este registro con el anterior y hace evidente cualquier alteración",
     "sinRegistros": "Aún no hay registros de trazabilidad.",
     "tipoEvento": "Tipo de evento",
-    "todosEventos": "Todos"
+    "todosEventos": "Todos",
+    "cadenaComprometida": "Alteración crítica detectada en la cadena",
+    "cadenaComprometidaDetalle": "El sistema aisló el bloque afectado. Notifica al administrador y conserva esta evidencia para la auditoría.",
+    "aislar": "Aislar registro corrupto",
+    "aislando": "Aislando…"
   },
   "checklist": {
     "titulo": "Checklist BPA",
@@ -225,7 +231,80 @@
     "creado": "Usuario creado correctamente.",
     "errorDuplicado": "Ya existe un usuario con ese correo.",
     "sinUsuarios": "No hay usuarios registrados.",
-    "cancelar": "Cancelar"
+    "cancelar": "Cancelar",
+    "estado": "Estado",
+    "activo": "Activo",
+    "inactivo": "Inactivo",
+    "desactivar": "Desactivar",
+    "motivo": "Motivo",
+    "confirmarDesactivar": "¿Desactivar a {{nombre}}? No podrá iniciar sesión y su identidad se ocultará en reportes (derecho al olvido, Ley N.° 29733). El historial de auditoría permanece intacto.",
+    "desactivadoOk": "Usuario desactivado correctamente.",
+    "motivos": {
+      "renuncia": "Renuncia",
+      "despido": "Despido",
+      "jubilacion": "Jubilación",
+      "otros": "Otros"
+    }
+  },
+  "privacidad": {
+    "titulo": "Aviso de privacidad",
+    "descripcion": "Conforme a la Ley N.° 29733 de Protección de Datos Personales, necesitamos tu consentimiento explícito para tratar tus datos dentro del sistema de monitoreo. Debes aceptar para continuar; si rechazas, se cerrará tu sesión.",
+    "aceptar": "Acepto",
+    "aceptando": "Guardando…",
+    "rechazar": "Rechazar",
+    "rechazando": "Cerrando sesión…"
+  },
+  "dispositivos": {
+    "titulo": "Dispositivos ESP32",
+    "descripcion": "Ciclo de vida de los sensores registrados en el sistema",
+    "id": "Device ID",
+    "conectividad": "Conectividad",
+    "firmware": "Firmware",
+    "estado": "Estado",
+    "activo": "Activo",
+    "inactivo": "Dado de baja",
+    "darDeBaja": "Dar de baja",
+    "sinDispositivos": "No hay dispositivos registrados.",
+    "confirmarBaja": "¿Dar de baja el dispositivo {{id}}? El histórico de lecturas y trazabilidad permanece intacto.",
+    "motivo": "Motivo de baja",
+    "descripcionBaja": "Descripción (opcional)",
+    "deviceIdReemplazo": "Device ID de reemplazo (opcional)",
+    "deviceIdReemplazoPlaceholder": "esp32-nuevo",
+    "bajaExitosa": "Dispositivo dado de baja correctamente.",
+    "procesando": "Procesando…",
+    "confirmar": "Confirmar",
+    "motivos": {
+      "falla_hardware": "Falla de hardware",
+      "mantenimiento": "Mantenimiento",
+      "reemplazo": "Reemplazo",
+      "fin_de_servicio": "Fin de servicio"
+    }
+  },
+  "firmware": {
+    "titulo": "Firmware y actualizaciones OTA",
+    "descripcion": "Gestión de releases y despliegues de firmware (simulado, sin ESP32 real)",
+    "nuevaRelease": "Nueva release",
+    "version": "Versión",
+    "hash": "Hash",
+    "columnaDescripcion": "Descripción",
+    "fechaCompilacion": "Compilada",
+    "sinReleases": "No hay releases preparadas.",
+    "releaseCreada": "Release preparada correctamente.",
+    "errorDuplicado": "Ya existe una release con esa versión.",
+    "programarDespliegue": "Programar despliegue",
+    "deviceId": "Device ID",
+    "versionObjetivo": "Versión objetivo",
+    "programar": "Programar",
+    "ejecutar": "Ejecutar despliegue",
+    "despliegueProgramado": "Despliegue programado. Ejecútalo cuando quieras aplicar el cambio.",
+    "errorDowngrade": "Downgrade rechazado: la versión objetivo no es más nueva que la instalada.",
+    "errorNoEncontrado": "Dispositivo o versión no encontrados. Prepara la release primero.",
+    "crear": "Preparar release",
+    "estados": {
+      "programado": "Programado",
+      "exitoso": "Exitoso",
+      "fallido": "Fallido"
+    }
   },
   "comunes": {
     "error": "Ocurrió un error. Intenta de nuevo.",

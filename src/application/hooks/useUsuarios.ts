@@ -37,5 +37,19 @@ export function useUsuarios() {
     [consultar],
   )
 
-  return { usuarios, cargando, crear }
+  const desactivar = useCallback(
+    async (usuarioId: string, motivo: string): Promise<'ok' | 'conflicto' | 'error'> => {
+      try {
+        await apiClient.patch(`/api/usuarios/${usuarioId}/desactivar`, { motivo })
+        await consultar()
+        return 'ok'
+      } catch (error) {
+        if (axios.isAxiosError(error) && error.response?.status === 409) return 'conflicto'
+        return 'error'
+      }
+    },
+    [consultar],
+  )
+
+  return { usuarios, cargando, crear, desactivar }
 }

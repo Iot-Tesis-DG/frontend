@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
-import { setAccessToken } from '@/infrastructure/api/apiClient'
+import { apiClient, setAccessToken } from '@/infrastructure/api/apiClient'
 import { decodificarSesion, login as loginService } from '@/infrastructure/auth/authService'
 import type { SesionUsuario } from '@/infrastructure/auth/authService'
 import { limpiarSesionActiva, marcarSesionActiva } from '@/infrastructure/auth/avisoSesion'
@@ -9,8 +9,11 @@ import { MODO_DEMO } from '@/infrastructure/demo/modoDemo'
 interface AuthState {
   usuario: SesionUsuario | null
   autenticado: boolean
+  requierePrivacidad: boolean
   login: (email: string, password: string) => Promise<void>
   logout: () => void
+  aceptarPrivacidad: () => Promise<void>
+  rechazarPrivacidad: () => Promise<void>
 }
 
 const CLAVE_TOKEN_DEMO = 'cf_demo_token'
@@ -36,19 +39,33 @@ const sesionRestaurada = restaurarSesionDemo()
 export const useAuthStore = create<AuthState>((set) => ({
   usuario: sesionRestaurada,
   autenticado: sesionRestaurada !== null,
+  requierePrivacidad: false,
 
   login: async (email, password) => {
-    const token = await loginService(email, password)
-    setAccessToken(token)
+    const { accessToken, requierePrivacidad } = await loginService(email, password)
+    setAccessToken(accessToken)
     marcarSesionActiva()
-    if (MODO_DEMO) sessionStorage.setItem(CLAVE_TOKEN_DEMO, token)
-    set({ usuario: decodificarSesion(token), autenticado: true })
+    if (MODO_DEMO) sessionStorage.setItem(CLAVE_TOKEN_DEMO, accessToken)
+    set({ usuario: decodificarSesion(accessToken), autenticado: true, requierePrivacidad })
   },
 
   logout: () => {
     setAccessToken(null)
     limpiarSesionActiva()
     if (MODO_DEMO) sessionStorage.removeItem(CLAVE_TOKEN_DEMO)
-    set({ usuario: null, autenticado: false })
+    set({ usuario: null, autenticado: false, requierePrivacidad: false })
+  },
+
+  aceptarPrivacidad: async () => {
+    await apiClient.post('/api/auth/privacidad/aceptar')
+    set({ requierePrivacidad: false })
+  },
+
+  rechazarPrivacidad: async () => {
+    try {
+      await apiClient.post('/api/auth/privacidad/rechazar')
+    } catch {
+      // El backend responde 401 intencionalmente (revoca el token): esperado.
+    }
   },
 }))

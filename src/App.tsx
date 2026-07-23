@@ -5,6 +5,7 @@ import { setOnSesionExpirada } from '@/infrastructure/api/apiClient'
 import { marcarSesionExpirada } from '@/infrastructure/auth/avisoSesion'
 import { useAuthStore } from '@/application/stores/authStore'
 import { AppLayout } from '@/presentation/layouts/AppLayout'
+import { PrivacyConsentModal } from '@/presentation/components/PrivacyConsentModal'
 import { RequireAuth, RequireRoles } from '@/presentation/components/RouteGuards'
 import { LoginPage } from '@/presentation/pages/LoginPage'
 import { DashboardPage } from '@/presentation/pages/DashboardPage'
@@ -15,6 +16,8 @@ import { ChecklistBPAPage } from '@/presentation/pages/ChecklistBPAPage'
 import { ReportesPage } from '@/presentation/pages/ReportesPage'
 import { AuditoriaPage } from '@/presentation/pages/AuditoriaPage'
 import { UsuariosPage } from '@/presentation/pages/UsuariosPage'
+import { DispositivosPage } from '@/presentation/pages/DispositivosPage'
+import { FirmwarePage } from '@/presentation/pages/FirmwarePage'
 
 function SesionExpiradaListener() {
   const navigate = useNavigate()
@@ -53,12 +56,15 @@ export function App() {
             <Route element={<RequireRoles roles={[]} />}>
               <Route path="/auditoria" element={<AuditoriaPage />} />
               <Route path="/usuarios" element={<UsuariosPage />} />
+              <Route path="/dispositivos" element={<DispositivosPage />} />
+              <Route path="/firmware" element={<FirmwarePage />} />
             </Route>
           </Route>
         </Route>
 
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
+      <PrivacyConsentModal />
     </BrowserRouter>
   )
 }

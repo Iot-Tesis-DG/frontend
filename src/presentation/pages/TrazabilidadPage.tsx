@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link2, ShieldAlert, ShieldCheck } from 'lucide-react'
+import { AlertOctagon, Link2, ShieldAlert, ShieldCheck } from 'lucide-react'
 
 import { useTrazabilidad } from '@/application/hooks/useTrazabilidad'
+import { useAuthStore } from '@/application/stores/authStore'
 import { cn } from '@/lib/utils'
 import { PageHeader } from '../components/PageHeader'
 import { Badge } from '../components/ui/badge'
@@ -38,9 +39,26 @@ function HashCorto({ hash }: { hash: string }) {
 
 export function TrazabilidadPage() {
   const { t } = useTranslation()
-  const { registros, cargando, consultar, verificacion, verificando, verificarIntegridad } =
-    useTrazabilidad()
+  const {
+    registros,
+    cargando,
+    consultar,
+    verificacion,
+    verificando,
+    verificarIntegridad,
+    estadoCadena,
+    aislarCorrupcion,
+  } = useTrazabilidad()
   const [tipoEvento, setTipoEvento] = useState('')
+  const [aislando, setAislando] = useState(false)
+  const usuario = useAuthStore((s) => s.usuario)
+
+  const aislar = async () => {
+    if (!verificacion?.detalle_inconsistencia) return
+    setAislando(true)
+    await aislarCorrupcion(verificacion.detalle_inconsistencia.id)
+    setAislando(false)
+  }
 
   return (
     <div>
@@ -50,6 +68,24 @@ export function TrazabilidadPage() {
           {verificando ? t('trazabilidad.verificando') : t('trazabilidad.verificar')}
         </Button>
       </PageHeader>
+
+      {/* ── HU-47: banner de cadena comprometida ────────────── */}
+      {estadoCadena?.cadena_comprometida && (
+        <Card className="mb-5 animate-rise border-clay-100 bg-clay-100/60">
+          <CardContent className="flex items-center gap-3 p-4">
+            <AlertOctagon className="size-5 shrink-0 text-clay-600" />
+            <div>
+              <p className="text-sm font-semibold text-clay-700">{t('trazabilidad.cadenaComprometida')}</p>
+              <p className="text-[13px] text-muted">{t('trazabilidad.cadenaComprometidaDetalle')}</p>
+            </div>
+            {usuario?.rol === 'administrador' && verificacion?.detalle_inconsistencia && (
+              <Button variant="danger" size="sm" className="ml-auto shrink-0" onClick={() => void aislar()} disabled={aislando}>
+                {aislando ? t('trazabilidad.aislando') : t('trazabilidad.aislar')}
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* ── Resultado de verificación ───────────────────────── */}
       {verificacion && (

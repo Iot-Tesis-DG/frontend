@@ -33,6 +33,8 @@
     "reportes": "Reports",
     "auditoria": "Audit log",
     "usuarios": "Users",
+    "dispositivos": "Devices",
+    "firmware": "Firmware / OTA",
     "cerrarSesion": "Sign out",
     "abrirMenu": "Open menu",
     "seccionOperacion": "Operations",
@@ -162,7 +164,11 @@
     "selloAyuda": "SHA-256 cryptographic fingerprint: links this record to the previous one and makes any tampering evident",
     "sinRegistros": "No traceability records yet.",
     "tipoEvento": "Event type",
-    "todosEventos": "All"
+    "todosEventos": "All",
+    "cadenaComprometida": "Critical tampering detected in the chain",
+    "cadenaComprometidaDetalle": "The system quarantined the affected block. Notify the administrator and preserve this evidence for the audit.",
+    "aislar": "Quarantine corrupted record",
+    "aislando": "Quarantining…"
   },
   "checklist": {
     "titulo": "GSP Checklist",
@@ -225,7 +231,80 @@
     "creado": "User created successfully.",
     "errorDuplicado": "A user with that email already exists.",
     "sinUsuarios": "No users registered.",
-    "cancelar": "Cancel"
+    "cancelar": "Cancel",
+    "estado": "Status",
+    "activo": "Active",
+    "inactivo": "Inactive",
+    "desactivar": "Deactivate",
+    "motivo": "Reason",
+    "confirmarDesactivar": "Deactivate {{nombre}}? They will no longer be able to sign in, and their identity will be hidden in reports (right to be forgotten, Law No. 29733). The audit trail remains intact.",
+    "desactivadoOk": "User deactivated successfully.",
+    "motivos": {
+      "renuncia": "Resignation",
+      "despido": "Termination",
+      "jubilacion": "Retirement",
+      "otros": "Other"
+    }
+  },
+  "privacidad": {
+    "titulo": "Privacy notice",
+    "descripcion": "Under Law No. 29733 on Personal Data Protection, we need your explicit consent to process your data within the monitoring system. You must accept to continue; if you decline, your session will be closed.",
+    "aceptar": "I accept",
+    "aceptando": "Saving…",
+    "rechazar": "Decline",
+    "rechazando": "Signing out…"
+  },
+  "dispositivos": {
+    "titulo": "ESP32 devices",
+    "descripcion": "Lifecycle of the sensors registered in the system",
+    "id": "Device ID",
+    "conectividad": "Connectivity",
+    "firmware": "Firmware",
+    "estado": "Status",
+    "activo": "Active",
+    "inactivo": "Decommissioned",
+    "darDeBaja": "Decommission",
+    "sinDispositivos": "No devices registered.",
+    "confirmarBaja": "Decommission device {{id}}? The reading and traceability history remains intact.",
+    "motivo": "Reason",
+    "descripcionBaja": "Description (optional)",
+    "deviceIdReemplazo": "Replacement device ID (optional)",
+    "deviceIdReemplazoPlaceholder": "esp32-new",
+    "bajaExitosa": "Device decommissioned successfully.",
+    "procesando": "Processing…",
+    "confirmar": "Confirm",
+    "motivos": {
+      "falla_hardware": "Hardware failure",
+      "mantenimiento": "Maintenance",
+      "reemplazo": "Replacement",
+      "fin_de_servicio": "End of service"
+    }
+  },
+  "firmware": {
+    "titulo": "Firmware & OTA updates",
+    "descripcion": "Manage firmware releases and deployments (simulated, no real ESP32)",
+    "nuevaRelease": "New release",
+    "version": "Version",
+    "hash": "Hash",
+    "columnaDescripcion": "Description",
+    "fechaCompilacion": "Built",
+    "sinReleases": "No releases prepared.",
+    "releaseCreada": "Release prepared successfully.",
+    "errorDuplicado": "A release with that version already exists.",
+    "programarDespliegue": "Schedule deployment",
+    "deviceId": "Device ID",
+    "versionObjetivo": "Target version",
+    "programar": "Schedule",
+    "ejecutar": "Execute deployment",
+    "despliegueProgramado": "Deployment scheduled. Execute it whenever you want to apply the change.",
+    "errorDowngrade": "Downgrade rejected: the target version is not newer than the installed one.",
+    "errorNoEncontrado": "Device or version not found. Prepare the release first.",
+    "crear": "Prepare release",
+    "estados": {
+      "programado": "Scheduled",
+      "exitoso": "Successful",
+      "fallido": "Failed"
+    }
   },
   "comunes": {
     "error": "Something went wrong. Please try again.",

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 
 import type {
+  EstadoCadena,
   RegistroTrazabilidad,
   VerificacionIntegridad,
 } from '@/domain/entities/RegistroTrazabilidad'
@@ -11,6 +12,7 @@ export function useTrazabilidad() {
   const [cargando, setCargando] = useState(true)
   const [verificacion, setVerificacion] = useState<VerificacionIntegridad | null>(null)
   const [verificando, setVerificando] = useState(false)
+  const [estadoCadena, setEstadoCadena] = useState<EstadoCadena | null>(null)
 
   const consultar = useCallback(async (tipoEvento?: string) => {
     setCargando(true)
@@ -28,15 +30,47 @@ export function useTrazabilidad() {
     void consultar()
   }, [consultar])
 
+  const consultarEstadoCadena = useCallback(async () => {
+    const { data } = await apiClient.get<EstadoCadena>('/api/trazabilidad/estado')
+    setEstadoCadena(data)
+  }, [])
+
+  useEffect(() => {
+    void consultarEstadoCadena()
+  }, [consultarEstadoCadena])
+
   const verificarIntegridad = useCallback(async () => {
     setVerificando(true)
     try {
       const { data } = await apiClient.get<VerificacionIntegridad>('/api/trazabilidad/verificar')
       setVerificacion(data)
+      await consultarEstadoCadena()
     } finally {
       setVerificando(false)
     }
-  }, [])
+  }, [consultarEstadoCadena])
 
-  return { registros, cargando, consultar, verificacion, verificando, verificarIntegridad }
+  const aislarCorrupcion = useCallback(
+    async (registroId: string): Promise<'ok' | 'error'> => {
+      try {
+        await apiClient.post(`/api/trazabilidad/corrupcion/${registroId}/aislar`)
+        await consultarEstadoCadena()
+        return 'ok'
+      } catch {
+        return 'error'
+      }
+    },
+    [consultarEstadoCadena],
+  )
+
+  return {
+    registros,
+    cargando,
+    consultar,
+    verificacion,
+    verificando,
+    verificarIntegridad,
+    estadoCadena,
+    aislarCorrupcion,
+  }
 }

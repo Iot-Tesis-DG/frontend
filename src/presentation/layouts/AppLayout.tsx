@@ -6,8 +6,10 @@ import {
   Activity,
   Bell,
   ClipboardCheck,
+  DownloadCloud,
   FileText,
   FlaskConical,
+  HardDrive,
   History,
   Link2,
   LogOut,
@@ -58,6 +60,8 @@ const SECCIONES: SeccionNav[] = [
     items: [
       { ruta: '/auditoria', icono: ScrollText, claveI18n: 'nav.auditoria', roles: [] },
       { ruta: '/usuarios', icono: Users, claveI18n: 'nav.usuarios', roles: [] },
+      { ruta: '/dispositivos', icono: HardDrive, claveI18n: 'nav.dispositivos', roles: [] },
+      { ruta: '/firmware', icono: DownloadCloud, claveI18n: 'nav.firmware', roles: [] },
     ],
   },
 ]

@@ -160,6 +160,9 @@ export const demoAdapter: AxiosAdapter = async (config) => {
       nombre: String(cuerpo.nombre ?? ''),
       email,
       rol: (cuerpo.rol ?? 'tecnico') as Rol,
+      is_active: true,
+      motivo_desactivacion: null,
+      desactivado_en: null,
     }
     estadoDemo.usuarios.push(nuevo)
     return responder(config, nuevo, 201)

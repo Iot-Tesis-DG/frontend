@@ -5,7 +5,13 @@ export interface Usuario {
   nombre: string
   email: string
   rol: Rol
+  is_active: boolean
+  motivo_desactivacion: string | null
+  desactivado_en: string | null
 }
+
+export const MOTIVOS_DESACTIVACION = ['renuncia', 'despido', 'jubilacion', 'otros'] as const
+export type MotivoDesactivacion = (typeof MOTIVOS_DESACTIVACION)[number]
 
 export interface RegistroAuditoria {
   id: string
