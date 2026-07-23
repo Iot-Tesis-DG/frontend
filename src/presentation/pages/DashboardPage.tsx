@@ -81,13 +81,13 @@ function construirOpcionCurva(serie: LecturaTermica[], etiquetas: {
 }): EChartsCoreOption {
   const horas = serie.map((l) => formatearHora(l.timestamp))
   return {
-    textStyle: { fontFamily: 'Instrument Sans, sans-serif', color: '#75694f' },
+    textStyle: { fontFamily: 'Instrument Sans, sans-serif', color: '#766458' },
     grid: { left: 44, right: 16, top: 32, bottom: 28 },
     tooltip: {
       trigger: 'axis',
-      backgroundColor: '#fffef9',
-      borderColor: '#e7dcc4',
-      textStyle: { color: '#221c11', fontSize: 12 },
+      backgroundColor: '#ffffff',
+      borderColor: '#e1d7bd',
+      textStyle: { color: '#2f2f3d', fontSize: 12 },
       valueFormatter: (v: unknown) => (typeof v === 'number' ? `${v.toFixed(1)} °C` : '—'),
     },
     legend: {
@@ -96,22 +96,22 @@ function construirOpcionCurva(serie: LecturaTermica[], etiquetas: {
       icon: 'roundRect',
       itemWidth: 14,
       itemHeight: 3,
-      textStyle: { color: '#75694f', fontSize: 12 },
+      textStyle: { color: '#766458', fontSize: 12 },
     },
     xAxis: {
       type: 'category',
       data: horas,
       boundaryGap: false,
-      axisLine: { lineStyle: { color: '#e7dcc4' } },
+      axisLine: { lineStyle: { color: '#e1d7bd' } },
       axisTick: { show: false },
-      axisLabel: { fontSize: 11, color: '#988c70' },
+      axisLabel: { fontSize: 11, color: '#9c8d81' },
     },
     yAxis: {
       type: 'value',
       min: (value: { min: number }) => Math.floor(Math.min(value.min, 0)),
       max: (value: { max: number }) => Math.ceil(Math.max(value.max, 10)),
-      splitLine: { lineStyle: { color: '#f2ead8' } },
-      axisLabel: { fontSize: 11, color: '#988c70', formatter: '{value} °C' },
+      splitLine: { lineStyle: { color: '#efe9d6' } },
+      axisLabel: { fontSize: 11, color: '#9c8d81', formatter: '{value} °C' },
     },
     series: [
       {
@@ -120,28 +120,28 @@ function construirOpcionCurva(serie: LecturaTermica[], etiquetas: {
         smooth: true,
         symbol: 'none',
         data: serie.map((l) => l.temperatura_interna),
-        lineStyle: { width: 2.5, color: '#2e5c45' },
-        itemStyle: { color: '#2e5c45' },
+        lineStyle: { width: 2.5, color: '#4e5366' },
+        itemStyle: { color: '#4e5366' },
         areaStyle: {
           color: {
             type: 'linear',
             x: 0, y: 0, x2: 0, y2: 1,
             colorStops: [
-              { offset: 0, color: 'rgba(46, 92, 69, 0.14)' },
-              { offset: 1, color: 'rgba(46, 92, 69, 0)' },
+              { offset: 0, color: 'rgba(78, 83, 102, 0.14)' },
+              { offset: 1, color: 'rgba(78, 83, 102, 0)' },
             ],
           },
         },
         markArea: {
           silent: true,
-          itemStyle: { color: 'rgba(46, 92, 69, 0.06)' },
+          itemStyle: { color: 'rgba(78, 83, 102, 0.06)' },
           data: [[{ yAxis: 2 }, { yAxis: 8 }]],
         },
         markLine: {
           silent: true,
           symbol: 'none',
-          lineStyle: { color: '#ad3f27', type: 'dashed', width: 1 },
-          label: { color: '#ad3f27', fontSize: 10, formatter: '{c} °C' },
+          lineStyle: { color: '#5d3237', type: 'dashed', width: 1 },
+          label: { color: '#5d3237', fontSize: 10, formatter: '{c} °C' },
           data: [{ yAxis: 2 }, { yAxis: 8 }],
         },
       },
@@ -151,8 +151,8 @@ function construirOpcionCurva(serie: LecturaTermica[], etiquetas: {
         smooth: true,
         symbol: 'none',
         data: serie.map((l) => l.temperatura_ambiental),
-        lineStyle: { width: 1.5, color: '#988c70', type: 'dashed' },
-        itemStyle: { color: '#988c70' },
+        lineStyle: { width: 1.5, color: '#9c8d81', type: 'dashed' },
+        itemStyle: { color: '#9c8d81' },
       },
     ],
   }

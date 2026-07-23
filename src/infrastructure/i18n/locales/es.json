@@ -40,9 +40,9 @@
     "seccionAdministracion": "Administración"
   },
   "roles": {
-    "administrador": "Administrador",
-    "farmaceutico": "Farmacéutico",
-    "tecnico": "Técnico"
+    "administrador": "Director Técnico (Químico Farmacéutico)",
+    "farmaceutico": "Personal Técnico de Farmacia",
+    "tecnico": "Cajero / Atención"
   },
   "riesgo": {
     "normal": "Normal",
@@ -144,7 +144,7 @@
     "mensaje": "Mensaje",
     "estado": "Estado",
     "acciones": "Acciones",
-    "soloFarmaceutico": "Solo el farmacéutico puede marcar alertas como revisadas."
+    "soloFarmaceutico": "Solo el personal técnico de farmacia puede marcar alertas como revisadas."
   },
   "trazabilidad": {
     "titulo": "Trazabilidad digital",

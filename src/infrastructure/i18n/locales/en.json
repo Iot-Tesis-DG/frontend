@@ -40,9 +40,9 @@
     "seccionAdministracion": "Administration"
   },
   "roles": {
-    "administrador": "Administrator",
-    "farmaceutico": "Pharmacist",
-    "tecnico": "Technician"
+    "administrador": "Technical Director (Pharmacist Chemist)",
+    "farmaceutico": "Pharmacy Technical Staff",
+    "tecnico": "Cashier / Front Desk"
   },
   "riesgo": {
     "normal": "Normal",
@@ -144,7 +144,7 @@
     "mensaje": "Message",
     "estado": "Status",
     "acciones": "Actions",
-    "soloFarmaceutico": "Only the pharmacist can mark alerts as reviewed."
+    "soloFarmaceutico": "Only pharmacy technical staff can mark alerts as reviewed."
   },
   "trazabilidad": {
     "titulo": "Digital traceability",
