@@ -1,0 +1,238 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,500;1,9..144,600&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+@import 'tailwindcss';
+
+@theme {
+  /* ── Tipografía ─────────────────────────────────────────── */
+  --font-display: 'Fraunces', ui-serif, Georgia, serif;
+  --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', monospace;
+
+  /* ── Primitivos: crema ──────────────────────────────────── */
+  --color-cream-50: #fdfbf6;
+  --color-cream-100: #f9f4e9;
+  --color-cream-200: #f2ead8;
+  --color-cream-300: #e7dcc4;
+  --color-cream-400: #d3c5a4;
+
+  /* ── Primitivos: tinta ──────────────────────────────────── */
+  --color-ink-900: #221c11;
+  --color-ink-700: #453d2c;
+  --color-ink-500: #75694f;
+  --color-ink-400: #988c70;
+
+  /* ── Primitivos: pino (acento) ──────────────────────────── */
+  --color-pine-900: #142e22;
+  --color-pine-800: #1b3c2d;
+  --color-pine-700: #234a37;
+  --color-pine-600: #2e5c45;
+  --color-pine-500: #3d7257;
+  --color-pine-300: #9dc0a8;
+  --color-pine-200: #cfe0d2;
+  --color-pine-100: #e6efe6;
+
+  /* ── Semánticos térmicos ────────────────────────────────── */
+  --color-honey-700: #8a5a14;
+  --color-honey-600: #a96f1d;
+  --color-honey-100: #f7ecd4;
+  --color-clay-700: #8f3320;
+  --color-clay-600: #ad3f27;
+  --color-clay-100: #f7e2da;
+
+  /* ── Glaciar: acento frío para la señal en vivo ─────────── */
+  --color-glacier-700: #275e6d;
+  --color-glacier-600: #337184;
+  --color-glacier-200: #c9dfe4;
+  --color-glacier-100: #e4eff1;
+
+  /* ── Semánticos de superficie ───────────────────────────── */
+  --color-background: #f6f1e4;
+  --color-surface: #fdfbf6;
+  --color-surface-raised: #fffef9;
+  --color-border: #e7dcc4;
+  --color-border-strong: #d3c5a4;
+  --color-foreground: #221c11;
+  --color-muted: #75694f;
+  --color-faint: #988c70;
+  --color-primary: #2e5c45;
+  --color-primary-hover: #234a37;
+  --color-primary-tint: #e6efe6;
+
+  /* ── Radios (variados a propósito) ──────────────────────── */
+  --radius-field: 0.375rem;
+  --radius-card: 0.75rem;
+  --radius-modal: 0.875rem;
+
+  /* ── Sombras cálidas ────────────────────────────────────── */
+  --shadow-card: 0 1px 2px rgb(34 28 17 / 0.05), 0 4px 12px -4px rgb(34 28 17 / 0.08);
+  --shadow-raised: 0 2px 4px rgb(34 28 17 / 0.06), 0 12px 28px -8px rgb(34 28 17 / 0.14);
+  --shadow-lift: 0 3px 6px rgb(34 28 17 / 0.07), 0 18px 36px -12px rgb(34 28 17 / 0.18);
+
+  /* ── Animaciones de entrada ─────────────────────────────── */
+  --animate-rise: rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-rise-lg: rise-lg 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-fade: fade 0.4s ease-out both;
+  --animate-drawer: deslizar-drawer 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+
+  @keyframes deslizar-drawer {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes rise-lg {
+    from {
+      opacity: 0;
+      transform: translateY(22px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes fade {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+}
+
+/* Trazo de isotermas: se dibujan solas al cargar el login */
+@keyframes trazar-isoterma {
+  from {
+    stroke-dashoffset: 900;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@layer base {
+  html {
+    color-scheme: light;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    /* Atmósfera: velo de luz superior + textura de papel (puntos de tinta) */
+    background-image:
+      radial-gradient(1200px 480px at 50% -120px, rgb(253 251 246 / 0.9), transparent 70%),
+      radial-gradient(rgb(34 28 17 / 0.025) 1px, transparent 1px);
+    background-size:
+      100% 100%,
+      24px 24px;
+  }
+
+  ::selection {
+    background-color: var(--color-pine-200);
+    color: var(--color-ink-900);
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  /* Inputs de fecha/hora: WebKit (iOS/Safari) los pinta con estilo propio,
+     centrados y con altura colapsada. Se normalizan al look del resto. */
+  input[type='date'],
+  input[type='datetime-local'],
+  input[type='time'] {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  input::-webkit-date-and-time-value {
+    text-align: left;
+    line-height: 1.4;
+  }
+  input::-webkit-datetime-edit {
+    display: inline-flex;
+    align-items: center;
+    padding: 0;
+  }
+  input::-webkit-calendar-picker-indicator {
+    opacity: 0.55;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-cream-400);
+    border-radius: 6px;
+    border: 2px solid var(--color-background);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer utilities {
+  .nums {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Etiqueta editorial: pequeñas versalitas espaciadas */
+  .eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-faint);
+  }
+
+  /* Tarjetas que responden al cursor con una elevación sutil */
+  .card-lift {
+    transition:
+      transform 0.18s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .card-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lift);
+  }
+
+  .isoterma {
+    stroke-dasharray: 900;
+    animation: trazar-isoterma 2.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+}
