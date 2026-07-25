@@ -39,7 +39,8 @@
     "abrirMenu": "Abrir menú",
     "seccionOperacion": "Operación",
     "seccionCumplimiento": "Cumplimiento",
-    "seccionAdministracion": "Administración"
+    "seccionAdministracion": "Administración",
+    "metricasIA": "Métricas IA"
   },
   "roles": {
     "administrador": "Director Técnico (Químico Farmacéutico)",
@@ -175,7 +176,7 @@
     "descripcion": "Lista de verificación de Buenas Prácticas de Almacenamiento",
     "progreso": "{{hechos}} de {{total}} verificados",
     "reiniciar": "Reiniciar checklist",
-    "nota": "Basado en el Manual de Buenas Prácticas de Almacenamiento (RM N.º 132-2015/MINSA y modificatorias). El estado se guarda localmente en este equipo.",
+    "nota": "Basado en el Manual de Buenas Prácticas de Almacenamiento (RM N.º 132-2015/MINSA y modificatorias). Cada guardado queda registrado en la cadena de trazabilidad SHA-256.",
     "items": {
       "temperatura": "El refrigerador registra temperatura dentro del rango 2–8 °C",
       "termometro": "El sensor de temperatura está ubicado junto al producto, no en la pared",
@@ -187,7 +188,20 @@
       "exclusivo": "El refrigerador es de uso exclusivo para productos farmacéuticos",
       "rotulado": "Los productos están rotulados y con fechas de vencimiento visibles",
       "respaldo": "Existe un plan de contingencia ante corte de energía"
-    }
+    },
+    "guardar": "Guardar verificación",
+    "guardando": "Guardando…",
+    "guardado": "Verificación registrada en la cadena de trazabilidad",
+    "errorGuardar": "No se pudo guardar la verificación. Revise su conexión e inténtelo de nuevo.",
+    "errorCargar": "No se pudo cargar la verificación de hoy.",
+    "cargando": "Cargando verificación del día…",
+    "observaciones": "Observaciones",
+    "observacionesPlaceholder": "Anote cualquier hallazgo, desviación o acción tomada durante la verificación.",
+    "ultimaActualizacion": "Última actualización: {{fecha}}",
+    "sinRegistrarHoy": "Aún no se ha registrado la verificación de hoy.",
+    "conforme": "Conforme",
+    "conObservaciones": "Con observaciones",
+    "avisoNoConforme": "Se registrará como «con observaciones»: {{faltantes}} ítem(s) declarado(s) como no conforme(s)."
   },
   "reportes": {
     "titulo": "Reportes BPA",
@@ -206,7 +220,10 @@
     "alertas": "Alertas",
     "registrosTrazabilidad": "Registros de trazabilidad",
     "sinReporte": "Configura el periodo y genera un reporte para ver el resumen.",
-    "errorGenerar": "No se pudo generar el reporte."
+    "errorGenerar": "No se pudo generar el reporte.",
+    "descargarPdf": "Descargar PDF",
+    "generandoPdf": "Generando PDF…",
+    "notaPdf": "El PDF incluye el resultado de la verificación de integridad de la cadena SHA-256; es el documento que se presenta ante una inspección."
   },
   "auditoria": {
     "titulo": "Bitácora de auditoría",
@@ -314,5 +331,36 @@
     "sesionExpirada": "Tu sesión expiró. Inicia sesión nuevamente.",
     "sinPermiso": "No tienes permiso para ver esta sección.",
     "idioma": "Idioma"
+  },
+  "metricasIA": {
+    "titulo": "Métricas del modelo de IA",
+    "descripcion": "Evidencia de desempeño del clasificador Random Forest que asigna el nivel de riesgo térmico (RNF-04).",
+    "f1Ponderado": "F1 ponderado",
+    "accuracy": "Exactitud",
+    "validacionCruzada": "Validación cruzada ({{folds}} particiones)",
+    "muestras": "Muestras de entrenamiento",
+    "cumpleUmbral": "El modelo cumple el umbral de desempeño exigido",
+    "noCumpleUmbral": "El modelo NO alcanza el umbral de desempeño exigido",
+    "explicacionUmbral": "F1 ponderado obtenido: {{f1}}; mínimo requerido por el RNF-04: {{umbral}}. La validación cruzada se agrupa por escenario, de modo que ninguna medición de un mismo evento térmico aparece a la vez en entrenamiento y prueba.",
+    "porClase": "Desempeño por clase de riesgo",
+    "clase": "Clase",
+    "precision": "Precisión",
+    "recall": "Exhaustividad",
+    "soporte": "Casos de prueba",
+    "notaRecall": "En este dominio la exhaustividad sobre «excursión crítica» es la métrica que más pesa: un falso negativo significa un lote de medicamentos que se echa a perder sin que nadie lo advierta.",
+    "importancias": "Peso de cada variable en la decisión",
+    "procedencia": "Procedencia del artefacto",
+    "version": "Versión del modelo",
+    "entrenadoEl": "Entrenado el",
+    "semilla": "Semilla aleatoria",
+    "particionMuestras": "Muestras entrenamiento / prueba",
+    "hashDataset": "Hash del dataset",
+    "hashModelo": "Hash del modelo",
+    "notaReproducibilidad": "Los hashes del dataset y del artefacto permiten reproducir el entrenamiento y comprobar que el modelo en ejecución es exactamente el evaluado.",
+    "noEntrenado": "El modelo Random Forest no está entrenado en este entorno. Ejecute el script de entrenamiento para generar el artefacto y sus métricas.",
+    "errorCarga": "No se pudieron cargar las métricas del modelo."
+  },
+  "sesion": {
+    "porExpirar": "Tu sesión expirará en {{restante}}. Guarda lo que estés haciendo."
   }
 }

@@ -39,7 +39,8 @@
     "abrirMenu": "Open menu",
     "seccionOperacion": "Operations",
     "seccionCumplimiento": "Compliance",
-    "seccionAdministracion": "Administration"
+    "seccionAdministracion": "Administration",
+    "metricasIA": "AI metrics"
   },
   "roles": {
     "administrador": "Technical Director (Pharmacist Chemist)",
@@ -175,7 +176,7 @@
     "descripcion": "Good Storage Practices verification list",
     "progreso": "{{hechos}} of {{total}} verified",
     "reiniciar": "Reset checklist",
-    "nota": "Based on the Good Storage Practices Manual (MINSA regulation). Progress is stored locally on this device.",
+    "nota": "Based on the Good Storage Practices Manual (RM No. 132-2015/MINSA and amendments). Every save is recorded in the SHA-256 traceability chain.",
     "items": {
       "temperatura": "The refrigerator records temperature within the 2–8 °C range",
       "termometro": "The temperature sensor sits next to the product, not on the wall",
@@ -187,7 +188,20 @@
       "exclusivo": "The refrigerator is used exclusively for pharmaceutical products",
       "rotulado": "Products are labelled with visible expiry dates",
       "respaldo": "A contingency plan exists for power outages"
-    }
+    },
+    "guardar": "Save verification",
+    "guardando": "Saving…",
+    "guardado": "Verification recorded in the traceability chain",
+    "errorGuardar": "Could not save the verification. Check your connection and try again.",
+    "errorCargar": "Could not load today's verification.",
+    "cargando": "Loading today's verification…",
+    "observaciones": "Notes",
+    "observacionesPlaceholder": "Record any finding, deviation or action taken during the verification.",
+    "ultimaActualizacion": "Last updated: {{fecha}}",
+    "sinRegistrarHoy": "Today's verification has not been recorded yet.",
+    "conforme": "Compliant",
+    "conObservaciones": "With findings",
+    "avisoNoConforme": "Will be recorded as “with findings”: {{faltantes}} item(s) declared non-compliant."
   },
   "reportes": {
     "titulo": "GSP Reports",
@@ -206,7 +220,10 @@
     "alertas": "Alerts",
     "registrosTrazabilidad": "Traceability records",
     "sinReporte": "Set the period and generate a report to see the summary.",
-    "errorGenerar": "The report could not be generated."
+    "errorGenerar": "The report could not be generated.",
+    "descargarPdf": "Download PDF",
+    "generandoPdf": "Generating PDF…",
+    "notaPdf": "The PDF embeds the SHA-256 chain integrity verdict; it is the document presented during an inspection."
   },
   "auditoria": {
     "titulo": "Audit log",
@@ -314,5 +331,36 @@
     "sesionExpirada": "Your session expired. Please sign in again.",
     "sinPermiso": "You do not have permission to view this section.",
     "idioma": "Language"
+  },
+  "metricasIA": {
+    "titulo": "AI model metrics",
+    "descripcion": "Performance evidence for the Random Forest classifier that assigns the thermal risk level (RNF-04).",
+    "f1Ponderado": "Weighted F1",
+    "accuracy": "Accuracy",
+    "validacionCruzada": "Cross-validation ({{folds}} folds)",
+    "muestras": "Training samples",
+    "cumpleUmbral": "The model meets the required performance threshold",
+    "noCumpleUmbral": "The model does NOT meet the required performance threshold",
+    "explicacionUmbral": "Weighted F1 obtained: {{f1}}; minimum required by RNF-04: {{umbral}}. Cross-validation is grouped by scenario, so no two readings of the same thermal event appear in both training and test sets.",
+    "porClase": "Performance by risk class",
+    "clase": "Class",
+    "precision": "Precision",
+    "recall": "Recall",
+    "soporte": "Test cases",
+    "notaRecall": "In this domain recall on “critical excursion” matters most: a false negative means a batch of medicine spoils without anyone noticing.",
+    "importancias": "Weight of each variable in the decision",
+    "procedencia": "Artifact provenance",
+    "version": "Model version",
+    "entrenadoEl": "Trained on",
+    "semilla": "Random seed",
+    "particionMuestras": "Training / test samples",
+    "hashDataset": "Dataset hash",
+    "hashModelo": "Model hash",
+    "notaReproducibilidad": "The dataset and artifact hashes allow the training run to be reproduced and confirm that the deployed model is exactly the one evaluated.",
+    "noEntrenado": "The Random Forest model is not trained in this environment. Run the training script to generate the artifact and its metrics.",
+    "errorCarga": "Model metrics could not be loaded."
+  },
+  "sesion": {
+    "porExpirar": "Your session expires in {{restante}}. Save your work."
   }
 }

@@ -11,6 +11,8 @@ export interface SesionUsuario {
   id: string
   email: string
   rol: Rol
+  /** Instante de expiración del JWT, en milisegundos (`exp` × 1000). */
+  expiraEn: number
 }
 
 export interface ResultadoLogin {
@@ -29,5 +31,12 @@ export async function login(email: string, password: string): Promise<ResultadoL
 /** Decodifica el payload del JWT (sin verificar firma: eso lo hace el backend). */
 export function decodificarSesion(token: string): SesionUsuario {
   const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')))
-  return { id: payload.sub, email: payload.email, rol: payload.rol }
+  return {
+    id: payload.sub,
+    email: payload.email,
+    rol: payload.rol,
+    // `exp` viene en segundos (RFC 7519); el resto del frontend trabaja en
+    // milisegundos, así que se normaliza aquí y no en cada consumidor.
+    expiraEn: typeof payload.exp === 'number' ? payload.exp * 1000 : 0,
+  }
 }

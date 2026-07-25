@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
-import { apiClient, setAccessToken } from '@/infrastructure/api/apiClient'
+import { apiClient, getAccessToken, setAccessToken } from '@/infrastructure/api/apiClient'
 import { decodificarSesion, login as loginService } from '@/infrastructure/auth/authService'
 import type { SesionUsuario } from '@/infrastructure/auth/authService'
 import { limpiarSesionActiva, marcarSesionActiva } from '@/infrastructure/auth/avisoSesion'
@@ -11,7 +11,11 @@ interface AuthState {
   autenticado: boolean
   requierePrivacidad: boolean
   login: (email: string, password: string) => Promise<void>
-  logout: () => void
+  /**
+   * `revocar: false` para el cierre provocado por una sesión ya expirada:
+   * el token no sirve, así que pedir su revocación solo produciría un 401.
+   */
+  logout: (opciones?: { revocar?: boolean }) => void
   aceptarPrivacidad: () => Promise<void>
   rechazarPrivacidad: () => Promise<void>
 }
@@ -49,7 +53,28 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ usuario: decodificarSesion(accessToken), autenticado: true, requierePrivacidad })
   },
 
-  logout: () => {
+  logout: ({ revocar = true } = {}) => {
+    // El backend revoca el jti del token (lista de revocación en memoria): sin
+    // esta llamada, un JWT copiado del tráfico seguiría siendo válido hasta su
+    // expiración aunque el usuario hubiera cerrado sesión.
+    //
+    // No se espera la respuesta a propósito: el estado local debe limpiarse
+    // igual aunque la red falle, o un backend caído dejaría al usuario dentro.
+    const token = getAccessToken()
+    if (revocar && !MODO_DEMO && token) {
+      // La cabecera se fija a mano en vez de dejarla al interceptor: este lee
+      // el token en un microtask, para entonces `setAccessToken(null)` ya
+      // habría corrido y la petición saldría sin autenticar (401), dejando el
+      // jti sin revocar.
+      void apiClient
+        .post('/api/auth/logout', undefined, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .catch(() => {
+          // Sin conexión no se puede revocar en el servidor; la sesión local se
+          // cierra de todos modos y el token expirará por sí solo.
+        })
+    }
     setAccessToken(null)
     limpiarSesionActiva()
     if (MODO_DEMO) sessionStorage.removeItem(CLAVE_TOKEN_DEMO)

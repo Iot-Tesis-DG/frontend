@@ -5,6 +5,7 @@ import * as DialogPrimitive from '@radix-ui/react-dialog'
 import {
   Activity,
   Bell,
+  Brain,
   ClipboardCheck,
   DownloadCloud,
   FileText,
@@ -24,6 +25,7 @@ import { useAuthStore } from '@/application/stores/authStore'
 import { tienePermiso, type Rol } from '@/domain/value-objects/Rol'
 import { MODO_DEMO } from '@/infrastructure/demo/modoDemo'
 import { cn } from '@/lib/utils'
+import { AvisoExpiracionSesion } from '../components/AvisoExpiracionSesion'
 import { LanguageSwitcher } from '../components/LanguageSwitcher'
 
 interface ItemNav {
@@ -53,6 +55,7 @@ const SECCIONES: SeccionNav[] = [
       { ruta: '/trazabilidad', icono: Link2, claveI18n: 'nav.trazabilidad', roles: ['farmaceutico', 'tecnico'] },
       { ruta: '/checklist-bpa', icono: ClipboardCheck, claveI18n: 'nav.checklist', roles: ['farmaceutico'] },
       { ruta: '/reportes', icono: FileText, claveI18n: 'nav.reportes', roles: ['farmaceutico'] },
+      { ruta: '/metricas-ia', icono: Brain, claveI18n: 'nav.metricasIA', roles: ['farmaceutico'] },
     ],
   },
   {
@@ -237,6 +240,8 @@ export function AppLayout() {
 
         {/* ── Contenido ──────────────────────────────────────── */}
         <div className="flex min-w-0 flex-1 flex-col">
+          {/* FS5: por encima de la cabecera, para que se vea en cualquier ruta. */}
+          <AvisoExpiracionSesion />
           <header className="sticky top-0 z-10 flex h-14 items-center gap-3 border-b border-border bg-background/85 px-4 backdrop-blur-sm sm:px-6">
             <DialogPrimitive.Trigger
               aria-label={t('nav.abrirMenu')}

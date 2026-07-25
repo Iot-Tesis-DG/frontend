@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Download, FileText } from 'lucide-react'
+import { Download, FileDown, FileText } from 'lucide-react'
 
 import { useReportesBPA } from '@/application/hooks/useReportesBPA'
 import { PageHeader } from '../components/PageHeader'
@@ -16,7 +16,8 @@ function hoyISO(desplazamientoDias = 0): string {
 
 export function ReportesPage() {
   const { t } = useTranslation()
-  const { reporte, generando, error, generar, descargarJson, descargarCsv } = useReportesBPA()
+  const { reporte, generando, error, descargandoPdf, generar, descargarJson, descargarCsv, descargarPdf } =
+    useReportesBPA()
 
   const [desde, setDesde] = useState(hoyISO(-30))
   const [hasta, setHasta] = useState(hoyISO())
@@ -89,7 +90,18 @@ export function ReportesPage() {
           <CardHeader className="gap-3 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle className="text-base">{t('reportes.resumen')}</CardTitle>
             <div className="flex flex-wrap items-center gap-2">
-              <Button size="sm" onClick={descargarCsv}>
+              {/* El PDF es el documento que se presenta en una inspección: lleva
+                  el veredicto de integridad de la cadena SHA-256 dentro. CSV y
+                  JSON son extracciones de datos, no evidencia firmada. */}
+              <Button
+                size="sm"
+                disabled={descargandoPdf}
+                onClick={() => void descargarPdf(desde, hasta, deviceId || undefined)}
+              >
+                <FileDown />
+                {descargandoPdf ? t('reportes.generandoPdf') : t('reportes.descargarPdf')}
+              </Button>
+              <Button variant="secondary" size="sm" onClick={descargarCsv}>
                 <Download />
                 {t('reportes.descargarCsv')}
               </Button>

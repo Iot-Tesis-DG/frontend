@@ -37,6 +37,7 @@ export function useReportesBPA() {
   const [reporte, setReporte] = useState<ReporteBPA | null>(null)
   const [generando, setGenerando] = useState(false)
   const [error, setError] = useState(false)
+  const [descargandoPdf, setDescargandoPdf] = useState(false)
 
   const generar = useCallback(async (desde: string, hasta: string, deviceId?: string) => {
     setGenerando(true)
@@ -99,5 +100,42 @@ export function useReportesBPA() {
     )
   }, [reporte])
 
-  return { reporte, generando, error, generar, descargarJson, descargarCsv }
+  // RF-13 / HU-38: el PDF lo compone el backend, no el navegador. Es la única
+  // forma de que el documento incluya el veredicto de integridad de la cadena
+  // SHA-256 calculado sobre los registros reales — un PDF armado en el cliente
+  // solo podría copiar lo que ya se le entregó, y no probaría nada.
+  const descargarPdf = useCallback(
+    async (desde: string, hasta: string, deviceId?: string) => {
+      setDescargandoPdf(true)
+      setError(false)
+      try {
+        const params: Record<string, string> = {
+          fecha_desde: new Date(desde).toISOString(),
+          fecha_hasta: new Date(`${hasta}T23:59:59`).toISOString(),
+        }
+        if (deviceId) params.device_id = deviceId
+        const { data } = await apiClient.get<Blob>('/api/reportes/bpa/pdf', {
+          params,
+          responseType: 'blob',
+        })
+        descargarBlob(data, 'application/pdf', `reporte-bpa-${desde}-${hasta}.pdf`)
+      } catch {
+        setError(true)
+      } finally {
+        setDescargandoPdf(false)
+      }
+    },
+    [],
+  )
+
+  return {
+    reporte,
+    generando,
+    error,
+    descargandoPdf,
+    generar,
+    descargarJson,
+    descargarCsv,
+    descargarPdf,
+  }
 }
