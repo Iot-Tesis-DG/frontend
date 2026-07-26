@@ -1,9 +1,11 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DownloadCloud, PackagePlus } from 'lucide-react'
 
 import { useFirmware } from '@/application/hooks/useFirmware'
 import type { FirmwareDespliegue } from '@/domain/entities/Firmware'
+import { rangoPagina } from '@/lib/paginacion'
+import { Paginacion } from '../components/Paginacion'
 import { PageHeader } from '../components/PageHeader'
 import { Badge } from '../components/ui/badge'
 import { Button } from '../components/ui/button'
@@ -31,6 +33,9 @@ const VARIANTE_ESTADO = {
 export function FirmwarePage() {
   const { t } = useTranslation()
   const { releases, cargando, prepararRelease, programarDespliegue, ejecutarDespliegue } = useFirmware()
+  const [pagina, setPagina] = useState(1)
+  // Solo se pinta la página visible: estas listas crecen sin techo.
+  const visibles = useMemo(() => releases.slice(...rangoPagina(pagina)), [releases, pagina])
 
   const [dialogoRelease, setDialogoRelease] = useState(false)
   const [formRelease, setFormRelease] = useState(RELEASE_INICIAL)
@@ -176,7 +181,7 @@ export function FirmwarePage() {
             ) : releases.length === 0 ? (
               <TableEmpty colSpan={4}>{t('firmware.sinReleases')}</TableEmpty>
             ) : (
-              releases.map((release) => (
+              visibles.map((release) => (
                 <TableRow key={release.id}>
                   <TableCell className="font-medium">{release.version}</TableCell>
                   <TableCell className="nums text-xs text-muted" title={release.hash_sha256}>
@@ -191,6 +196,7 @@ export function FirmwarePage() {
             )}
           </TableBody>
         </Table>
+        <Paginacion total={releases.length} pagina={pagina} onCambiar={setPagina} />
       </div>
 
       <Dialog open={dialogoRelease} onOpenChange={setDialogoRelease}>

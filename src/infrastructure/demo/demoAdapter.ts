@@ -8,13 +8,70 @@ import {
 import type { AlertaTermica } from '@/domain/entities/AlertaTermica'
 import type { LecturaTermica } from '@/domain/entities/LecturaTermica'
 import type { Rol } from '@/domain/value-objects/Rol'
-import { crearTokenDemo, estadoDemo } from './datosDemo'
+import { crearTokenDemo, estadoDemo, METRICAS_IA_DEMO } from './datosDemo'
 
 /**
  * Adapter de Axios para el modo demostración: intercepta cada request del
  * apiClient y responde con los datos simulados en memoria. Los hooks y las
  * páginas no cambian en absoluto — creen hablar con el backend real.
  */
+
+
+/**
+ * Compone un PDF válido en el navegador para el modo demostración.
+ *
+ * En el backend real este documento lo genera ReportLab e incluye el veredicto
+ * de integridad calculado sobre la cadena SHA-256 (HU-38). Aquí no hay backend,
+ * así que se emite un PDF mínimo pero bien formado —con su tabla xref— y el
+ * propio documento advierte que es una muestra. Antes esta ruta no existía en
+ * el adapter y el botón de PDF simplemente no descargaba nada.
+ */
+function pdfDemostracion(params: Record<string, string>): Blob {
+  const esc = (t: string) => t.replace(/([()\\])/g, '\\$1')
+  const desde = (params.fecha_desde ?? '').slice(0, 10)
+  const hasta = (params.fecha_hasta ?? '').slice(0, 10)
+
+  const lineas: Array<[number, string]> = [
+    [20, 'Reporte BPA - Cadena de Frio'],
+    [13, `Periodo: ${desde} a ${hasta}`],
+    [13, `Dispositivo: ${params.device_id || 'todos'}`],
+    [11, `Lecturas en el periodo: ${estadoDemo.lecturas.length}`],
+    [11, `Alertas registradas: ${estadoDemo.alertas.length}`],
+    [11, `Registros de trazabilidad: ${estadoDemo.trazabilidad.length}`],
+    [11, 'Cadena SHA-256: integra'],
+    [10, 'Documento de DEMOSTRACION generado en el navegador.'],
+    [10, 'En la instalacion real lo emite el backend con ReportLab.'],
+  ]
+
+  let y = 780
+  const texto = lineas
+    .map(([tam, linea]) => {
+      y -= tam + 12
+      return `BT /F1 ${tam} Tf 56 ${y} Td (${esc(linea)}) Tj ET`
+    })
+    .join('\n')
+
+  const objetos = [
+    '<< /Type /Catalog /Pages 2 0 R >>',
+    '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>',
+    `<< /Length ${texto.length} >>\nstream\n${texto}\nendstream`,
+    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
+  ]
+
+  let pdf = '%PDF-1.4\n'
+  const offsets: number[] = []
+  objetos.forEach((cuerpo, i) => {
+    offsets.push(pdf.length)
+    pdf += `${i + 1} 0 obj\n${cuerpo}\nendobj\n`
+  })
+  const inicioXref = pdf.length
+  pdf += `xref\n0 ${objetos.length + 1}\n0000000000 65535 f \n`
+  pdf += offsets.map((o) => `${String(o).padStart(10, '0')} 00000 n \n`).join('')
+  pdf += `trailer\n<< /Size ${objetos.length + 1} /Root 1 0 R >>\nstartxref\n${inicioXref}\n%%EOF`
+
+  return new Blob([pdf], { type: 'application/pdf' })
+}
 
 function esperar(ms: number): Promise<void> {
   return new Promise((resolver) => setTimeout(resolver, ms))
@@ -143,6 +200,89 @@ export const demoAdapter: AxiosAdapter = async (config) => {
       alertas: estadoDemo.alertas.filter((a) => enRango(a.created_at)),
       registros_trazabilidad: estadoDemo.trazabilidad.filter((r) => enRango(r.timestamp)),
     })
+  }
+
+  /* ── Checklist BPA (HU-37) ──────────────────────────────────
+     Faltaba: en modo demo la página mostraba "No se pudo cargar la
+     verificación de hoy", porque el adapter respondía 404 a una ruta que sí
+     existe en el backend real. */
+  if (metodo === 'get' && url === '/api/checklist-bpa') {
+    // `null` —no 404— es el estado normal de "aún no verificado hoy".
+    return responder(config, estadoDemo.checklist)
+  }
+  if (metodo === 'post' && url === '/api/checklist-bpa') {
+    const cuerpo = cuerpoJson(config)
+    const items = [
+      'temperatura', 'termometro', 'registros', 'alertas_revisadas',
+      'acciones_documentadas', 'puerta', 'limpieza', 'exclusivo',
+      'rotulado', 'respaldo',
+    ]
+    const conformes = items.filter((i) => cuerpo[i] === true).length
+    const guardado = {
+      id: `chk-demo-${Date.now()}`,
+      usuario_id: 'u-01',
+      fecha: String(cuerpo.fecha ?? new Date().toISOString().slice(0, 10)),
+      observaciones: (cuerpo.observaciones as string | null) ?? null,
+      total_conformes: conformes,
+      conforme: conformes === items.length,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      ...Object.fromEntries(items.map((i) => [i, cuerpo[i] === true])),
+    }
+    estadoDemo.checklist = guardado
+    return responder(config, guardado, 201)
+  }
+  if (metodo === 'get' && url === '/api/checklist-bpa/historial') {
+    return responder(config, estadoDemo.checklist ? [estadoDemo.checklist] : [])
+  }
+
+  /* ── Reporte BPA en PDF (HU-38) ─────────────────────────────
+     Faltaba: el botón de PDF no descargaba nada en la demo. Aquí se compone
+     un PDF mínimo pero VÁLIDO en el navegador. En el backend real lo genera
+     ReportLab con el veredicto de integridad calculado sobre la cadena; esto
+     es una muestra de la demostración y lo dice en el propio documento. */
+  if (metodo === 'get' && url === '/api/reportes/bpa/pdf') {
+    return responder(config, pdfDemostracion(params) as unknown, 200)
+  }
+
+  /* ── Estado de la cadena (HU-47) ────────────────────────────── */
+  if (metodo === 'get' && url === '/api/trazabilidad/estado') {
+    return responder(config, { cadena_comprometida: false })
+  }
+
+  /* ── Métricas del modelo (RNF-04) ───────────────────────────── */
+  if (metodo === 'get' && url === '/api/ia/modelo') {
+    return responder(config, METRICAS_IA_DEMO)
+  }
+
+  /* ── Dispositivos (HU-30, HU-43, RF-18) ─────────────────────── */
+  if (metodo === 'get' && url === '/api/dispositivos') {
+    return responder(config, estadoDemo.dispositivos)
+  }
+  const baja = /^\/api\/dispositivos\/([^/]+)\/baja$/.exec(url)
+  if (metodo === 'post' && baja) {
+    const d = estadoDemo.dispositivos.find((x) => x.id === baja[1])
+    if (!d) fallar(config, 404, 'Dispositivo no encontrado')
+    d.activo = false
+    d.motivo_baja = String(cuerpoJson(config).motivo ?? 'reemplazo')
+    d.dado_de_baja_en = new Date().toISOString()
+    return responder(config, d)
+  }
+
+  /* ── Firmware / OTA (HU-46) ─────────────────────────────────── */
+  if (metodo === 'get' && url === '/api/firmware/releases') {
+    return responder(config, estadoDemo.firmware)
+  }
+  if (metodo === 'get' && url === '/api/firmware/despliegues') {
+    return responder(config, [])
+  }
+
+  /* ── Sesión y privacidad (HU-44) ────────────────────────────── */
+  if (metodo === 'post' && url === '/api/auth/logout') {
+    return responder(config, null, 204)
+  }
+  if (metodo === 'post' && url.startsWith('/api/auth/privacidad/')) {
+    return responder(config, { privacy_accepted: url.endsWith('aceptar'), privacy_version_accepted: '1.0' })
   }
 
   /* ── Usuarios y auditoría ───────────────────────────────────── */

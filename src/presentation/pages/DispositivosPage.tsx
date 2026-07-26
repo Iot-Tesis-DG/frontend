@@ -1,9 +1,11 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { HardDrive, PowerOff } from 'lucide-react'
 
 import { useDispositivos } from '@/application/hooks/useDispositivos'
 import { MOTIVOS_BAJA, type Dispositivo, type MotivoBaja } from '@/domain/entities/Dispositivo'
+import { rangoPagina } from '@/lib/paginacion'
+import { Paginacion } from '../components/Paginacion'
 import { PageHeader } from '../components/PageHeader'
 import { Badge } from '../components/ui/badge'
 import { Button } from '../components/ui/button'
@@ -28,6 +30,9 @@ const FORM_INICIAL: { motivo: MotivoBaja; descripcion: string; deviceIdReemplazo
 export function DispositivosPage() {
   const { t } = useTranslation()
   const { dispositivos, cargando, darDeBaja } = useDispositivos()
+  const [pagina, setPagina] = useState(1)
+  // Solo se pinta la página visible: estas listas crecen sin techo.
+  const visibles = useMemo(() => dispositivos.slice(...rangoPagina(pagina)), [dispositivos, pagina])
 
   const [dispositivoBaja, setDispositivoBaja] = useState<Dispositivo | null>(null)
   const [form, setForm] = useState(FORM_INICIAL)
@@ -91,7 +96,7 @@ export function DispositivosPage() {
                 </span>
               </TableEmpty>
             ) : (
-              dispositivos.map((dispositivo) => (
+              visibles.map((dispositivo) => (
                 <TableRow key={dispositivo.id}>
                   <TableCell className="font-medium">{dispositivo.id}</TableCell>
                   <TableCell>
@@ -124,6 +129,7 @@ export function DispositivosPage() {
             )}
           </TableBody>
         </Table>
+        <Paginacion total={dispositivos.length} pagina={pagina} onCambiar={setPagina} />
       </div>
 
       <Dialog open={dispositivoBaja !== null} onOpenChange={(abierto) => !abierto && setDispositivoBaja(null)}>

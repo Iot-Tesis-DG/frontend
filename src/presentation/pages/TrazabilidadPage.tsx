@@ -1,10 +1,12 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { AlertOctagon, Link2, ShieldAlert, ShieldCheck } from 'lucide-react'
 
 import { useTrazabilidad } from '@/application/hooks/useTrazabilidad'
 import { useAuthStore } from '@/application/stores/authStore'
 import { cn } from '@/lib/utils'
+import { rangoPagina } from '@/lib/paginacion'
+import { Paginacion } from '../components/Paginacion'
 import { PageHeader } from '../components/PageHeader'
 import { Badge } from '../components/ui/badge'
 import { Button } from '../components/ui/button'
@@ -49,6 +51,13 @@ export function TrazabilidadPage() {
     estadoCadena,
     aislarCorrupcion,
   } = useTrazabilidad()
+  const [pagina, setPagina] = useState(1)
+  // La lista completa puede tener miles de filas; solo se pinta la página
+  // visible. Al cambiar la lista (filtro nuevo) se vuelve a la primera.
+  const visibles = useMemo(
+    () => registros.slice(...rangoPagina(pagina)),
+    [registros, pagina],
+  )
   const [tipoEvento, setTipoEvento] = useState('')
   const [aislando, setAislando] = useState(false)
   const usuario = useAuthStore((s) => s.usuario)
@@ -170,7 +179,7 @@ export function TrazabilidadPage() {
                 </span>
               </TableEmpty>
             ) : (
-              registros.map((registro) => (
+              visibles.map((registro) => (
                 <TableRow key={registro.id}>
                   <TableCell className="nums text-[13px]">
                     {new Date(registro.timestamp).toLocaleString('es-PE')}
@@ -190,6 +199,7 @@ export function TrazabilidadPage() {
             )}
           </TableBody>
         </Table>
+        <Paginacion total={registros.length} pagina={pagina} onCambiar={setPagina} />
       </div>
     </div>
   )

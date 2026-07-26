@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { UserPlus, UserX, Users } from 'lucide-react'
 
@@ -6,6 +6,8 @@ import { useUsuarios } from '@/application/hooks/useUsuarios'
 import type { MotivoDesactivacion, Usuario } from '@/domain/entities/Usuario'
 import { MOTIVOS_DESACTIVACION } from '@/domain/entities/Usuario'
 import { ROLES, type Rol } from '@/domain/value-objects/Rol'
+import { rangoPagina } from '@/lib/paginacion'
+import { Paginacion } from '../components/Paginacion'
 import { PageHeader } from '../components/PageHeader'
 import { Badge } from '../components/ui/badge'
 import { Button } from '../components/ui/button'
@@ -32,6 +34,13 @@ const FORM_INICIAL = { nombre: '', email: '', password: '', rol: 'tecnico' as Ro
 export function UsuariosPage() {
   const { t } = useTranslation()
   const { usuarios, cargando, crear, desactivar } = useUsuarios()
+  const [pagina, setPagina] = useState(1)
+  // La lista completa puede tener miles de filas; solo se pinta la página
+  // visible. Al cambiar la lista (filtro nuevo) se vuelve a la primera.
+  const visibles = useMemo(
+    () => usuarios.slice(...rangoPagina(pagina)),
+    [usuarios, pagina],
+  )
 
   const [dialogoAbierto, setDialogoAbierto] = useState(false)
   const [form, setForm] = useState(FORM_INICIAL)
@@ -113,7 +122,7 @@ export function UsuariosPage() {
                 </span>
               </TableEmpty>
             ) : (
-              usuarios.map((usuario) => (
+              visibles.map((usuario) => (
                 <TableRow key={usuario.id}>
                   <TableCell className="font-medium">{usuario.nombre}</TableCell>
                   <TableCell className="text-muted">{usuario.email}</TableCell>
@@ -152,6 +161,7 @@ export function UsuariosPage() {
             )}
           </TableBody>
         </Table>
+        <Paginacion total={usuarios.length} pagina={pagina} onCambiar={setPagina} />
       </div>
 
       {/* ── Diálogo de desactivación (HU-45) ────────────────── */}

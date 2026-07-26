@@ -24,6 +24,7 @@ function diferida<T extends Record<string, ComponentType>>(
   return lazy(async () => ({ default: (await cargar())[nombre] }))
 }
 
+const GuiaPage = diferida(() => import('@/presentation/pages/GuiaPage'), 'GuiaPage')
 const DashboardPage = diferida(() => import('@/presentation/pages/DashboardPage'), 'DashboardPage')
 const HistorialPage = diferida(() => import('@/presentation/pages/HistorialPage'), 'HistorialPage')
 const AlertasPage = diferida(() => import('@/presentation/pages/AlertasPage'), 'AlertasPage')
@@ -83,6 +84,7 @@ export function App() {
 
           <Route element={<RequireAuth />}>
             <Route element={<AppLayout />}>
+              <Route path="/guia" element={<Pagina><GuiaPage /></Pagina>} />
               <Route path="/dashboard" element={<Pagina><DashboardPage /></Pagina>} />
               <Route path="/historial" element={<Pagina><HistorialPage /></Pagina>} />
               <Route path="/alertas" element={<Pagina><AlertasPage /></Pagina>} />

@@ -1,9 +1,11 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DoorClosed, DoorOpen, FilterX, SlidersHorizontal } from 'lucide-react'
 
 import { useHistorial, type FiltrosHistorial } from '@/application/hooks/useHistorial'
 import { NIVELES_RIESGO } from '@/domain/value-objects/NivelRiesgo'
+import { rangoPagina } from '@/lib/paginacion'
+import { Paginacion } from '../components/Paginacion'
 import { PageHeader } from '../components/PageHeader'
 import { RiskBadge } from '../components/RiskBadge'
 import { Button } from '../components/ui/button'
@@ -24,6 +26,13 @@ const FILTROS_INICIALES: FiltrosHistorial = {}
 export function HistorialPage() {
   const { t } = useTranslation()
   const { lecturas, cargando, consultar } = useHistorial()
+  const [pagina, setPagina] = useState(1)
+  // La lista completa puede tener miles de filas; solo se pinta la página
+  // visible. Al cambiar la lista (filtro nuevo) se vuelve a la primera.
+  const visibles = useMemo(
+    () => lecturas.slice(...rangoPagina(pagina)),
+    [lecturas, pagina],
+  )
   const [filtros, setFiltros] = useState<FiltrosHistorial>(FILTROS_INICIALES)
 
   const actualizarFiltro = (campo: keyof FiltrosHistorial, valor: string) => {
@@ -127,7 +136,7 @@ export function HistorialPage() {
             ) : lecturas.length === 0 ? (
               <TableEmpty colSpan={7}>{t('historial.sinResultados')}</TableEmpty>
             ) : (
-              lecturas.map((lectura) => (
+              visibles.map((lectura) => (
                 <TableRow key={lectura.id}>
                   <TableCell className="nums text-[13px]">
                     {new Date(lectura.timestamp).toLocaleString('es-PE')}
@@ -157,6 +166,7 @@ export function HistorialPage() {
             )}
           </TableBody>
         </Table>
+        <Paginacion total={lecturas.length} pagina={pagina} onCambiar={setPagina} />
       </div>
     </div>
   )

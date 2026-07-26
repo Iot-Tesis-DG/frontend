@@ -3,6 +3,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import {
+  BookOpen,
   Activity,
   Bell,
   Brain,
@@ -44,6 +45,9 @@ const SECCIONES: SeccionNav[] = [
   {
     claveI18n: 'nav.seccionOperacion',
     items: [
+      // La guía va primero y la ve todo el mundo: es el punto de entrada para
+      // quien abre el sistema por primera vez.
+      { ruta: '/guia', icono: BookOpen, claveI18n: 'nav.guia', roles: ['farmaceutico', 'tecnico'] },
       { ruta: '/dashboard', icono: Activity, claveI18n: 'nav.dashboard', roles: ['farmaceutico', 'tecnico'] },
       { ruta: '/historial', icono: History, claveI18n: 'nav.historial', roles: ['farmaceutico', 'tecnico'] },
       { ruta: '/alertas', icono: Bell, claveI18n: 'nav.alertas', roles: ['farmaceutico', 'tecnico'] },

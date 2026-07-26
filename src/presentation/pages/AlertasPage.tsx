@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { BellOff, CheckCheck, ClipboardPen } from 'lucide-react'
 
@@ -7,6 +7,8 @@ import { useAuthStore } from '@/application/stores/authStore'
 import { tienePermiso } from '@/domain/value-objects/Rol'
 import type { AlertaTermica } from '@/domain/entities/AlertaTermica'
 import { cn } from '@/lib/utils'
+import { rangoPagina } from '@/lib/paginacion'
+import { Paginacion } from '../components/Paginacion'
 import { PageHeader } from '../components/PageHeader'
 import { RiskBadge } from '../components/RiskBadge'
 import { Badge } from '../components/ui/badge'
@@ -35,6 +37,9 @@ export function AlertasPage() {
   const usuario = useAuthStore((s) => s.usuario)
   const { alertas, cargando, filtro, setFiltro, marcarRevisada, registrarAccionCorrectiva } =
     useAlertas()
+  const [pagina, setPagina] = useState(1)
+  // Solo se pinta la página visible: estas listas crecen sin techo.
+  const visibles = useMemo(() => alertas.slice(...rangoPagina(pagina)), [alertas, pagina])
 
   const [alertaSeleccionada, setAlertaSeleccionada] = useState<AlertaTermica | null>(null)
   const [descripcionAccion, setDescripcionAccion] = useState('')
@@ -105,7 +110,7 @@ export function AlertasPage() {
                 </span>
               </TableEmpty>
             ) : (
-              alertas.map((alerta) => (
+              visibles.map((alerta) => (
                 <TableRow key={alerta.id}>
                   <TableCell className="nums text-[13px]">
                     {alerta.created_at ? new Date(alerta.created_at).toLocaleString('es-PE') : '—'}
@@ -151,6 +156,7 @@ export function AlertasPage() {
             )}
           </TableBody>
         </Table>
+        <Paginacion total={alertas.length} pagina={pagina} onCambiar={setPagina} />
       </div>
 
       {/* ── Diálogo de acción correctiva ────────────────────── */}

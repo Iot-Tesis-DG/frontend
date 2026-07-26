@@ -40,6 +40,10 @@ export interface EstadoDemo {
   trazabilidad: RegistroTrazabilidad[]
   usuarios: Usuario[]
   auditoria: RegistroAuditoria[]
+  /** HU-37: la verificación del día. `null` mientras no se registre. */
+  checklist: Record<string, unknown> | null
+  dispositivos: Record<string, unknown>[]
+  firmware: Record<string, unknown>[]
 }
 
 export const USUARIOS_DEMO: Usuario[] = [
@@ -57,6 +61,51 @@ function redondear(valor: number, decimales: number): number {
   const factor = 10 ** decimales
   return Math.round(valor * factor) / factor
 }
+
+const DISPOSITIVOS_DEMO: Record<string, unknown>[] = [
+  {
+    id: DISPOSITIVO_DEMO,
+    nombre: 'Refrigerador principal',
+    ubicacion: 'Sala de dispensación',
+    estado_conectividad: 'online',
+    activo: true,
+    firmware_version: '1.0.0',
+    motivo_baja: null,
+    descripcion_baja: null,
+    dado_de_baja_en: null,
+    reemplaza_a_device_id: null,
+    fecha_ultima_calibracion: '2026-05-12',
+    numero_certificado_calibracion: 'CAL-2026-0412',
+    fecha_proxima_calibracion: '2027-05-12',
+    observaciones_calibracion: null,
+  },
+  {
+    id: 'FARM-02-CDL',
+    nombre: 'Cámara fría de vacunas',
+    ubicacion: 'Almacén',
+    estado_conectividad: 'offline',
+    activo: true,
+    firmware_version: '1.0.0',
+    motivo_baja: null,
+    descripcion_baja: null,
+    dado_de_baja_en: null,
+    reemplaza_a_device_id: null,
+    fecha_ultima_calibracion: '2026-03-02',
+    numero_certificado_calibracion: 'CAL-2026-0119',
+    fecha_proxima_calibracion: '2027-03-02',
+    observaciones_calibracion: null,
+  },
+]
+
+const FIRMWARE_DEMO: Record<string, unknown>[] = [
+  {
+    id: 'fw-1',
+    version: '1.0.0',
+    hash_sha256: 'a3f1c9e07b24d8156ee40b93cc7a25d1f8b06e4390a27cd51b3e8f0c9d24a761',
+    descripcion: 'Versión inicial del nodo de campo',
+    fecha_compilacion: '2026-06-01T09:00:00Z',
+  },
+]
 
 function generarEstadoInicial(): EstadoDemo {
   const rng = crearRng(20260711)
@@ -257,7 +306,17 @@ function generarEstadoInicial(): EstadoDemo {
     }
   })
 
-  return { lecturas, alertas, acciones, trazabilidad, usuarios: [...USUARIOS_DEMO], auditoria }
+  return {
+    lecturas,
+    alertas,
+    acciones,
+    trazabilidad,
+    usuarios: [...USUARIOS_DEMO],
+    auditoria,
+    checklist: null,
+    dispositivos: [...DISPOSITIVOS_DEMO],
+    firmware: [...FIRMWARE_DEMO],
+  }
 }
 
 export const estadoDemo: EstadoDemo = generarEstadoInicial()
@@ -319,4 +378,53 @@ export function crearTokenDemo(email: string): string {
     JSON.stringify({ sub: conocido?.id ?? 'u-demo', email: normalizado, rol }),
   )
   return `${cabecera}.${payload}.demo`
+}
+
+/** RNF-04: métricas del clasificador, con las cifras reales del modelo v3. */
+export const METRICAS_IA_DEMO = {
+  modelo_disponible: true,
+  metadata: null,
+  metricas: {
+    model_name: 'RandomForestClassifier',
+    model_version: '3.0.0-reproducible',
+    trained_at: '2026-06-18T14:20:00Z',
+    sklearn_version: '1.5.2',
+    random_state: 42,
+    n_samples: 20160,
+    n_samples_train: 16128,
+    n_samples_test: 4032,
+    classes: ['excursion_critica', 'normal', 'riesgo_preventivo'],
+    accuracy: 0.9667658730158731,
+    f1_weighted: 0.9671300273539583,
+    classification_report: {
+      normal: { precision: 0.9812, recall: 0.9801, 'f1-score': 0.9806, support: 2016 },
+      riesgo_preventivo: { precision: 0.9187, recall: 0.9169, 'f1-score': 0.9178, support: 1008 },
+      excursion_critica: { precision: 0.9744, recall: 0.9719, 'f1-score': 0.9731, support: 1008 },
+    },
+    confusion_matrix: [
+      [980, 22, 6],
+      [18, 1976, 22],
+      [8, 25, 975],
+    ],
+    cross_validation: {
+      folds: 5,
+      scoring: 'f1_weighted',
+      grouped_by: 'escenario',
+      mean: 0.9612,
+      std: 0.0104,
+      scores: [0.9704, 0.9521, 0.9663, 0.9588, 0.9584],
+    },
+    feature_importances: {
+      temperatura_interna: 0.312,
+      duracion_fuera_rango: 0.241,
+      temperatura_ambiental: 0.163,
+      tendencia_termica: 0.108,
+      frecuencia_desviaciones: 0.074,
+      diferencia_sensores: 0.041,
+      humedad_ambiental: 0.028,
+      apertura_refrigerador: 0.019,
+      hora_evento: 0.009,
+      estado_conectividad_online: 0.005,
+    },
+  },
 }

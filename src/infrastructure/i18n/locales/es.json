@@ -42,7 +42,8 @@
     "seccionOperacion": "Operación",
     "seccionCumplimiento": "Cumplimiento",
     "seccionAdministracion": "Administración",
-    "metricasIA": "Métricas IA"
+    "metricasIA": "Métricas IA",
+    "guia": "Guía de uso"
   },
   "roles": {
     "administrador": "Director Técnico (Químico Farmacéutico)",
@@ -334,7 +335,12 @@
     "cancelar": "Cancelar",
     "sesionExpirada": "Tu sesión expiró. Inicia sesión nuevamente.",
     "sinPermiso": "No tienes permiso para ver esta sección.",
-    "idioma": "Idioma"
+    "idioma": "Idioma",
+    "paginacion": "Paginación",
+    "anterior": "Página anterior",
+    "siguiente": "Página siguiente",
+    "rangoMostrado": "Mostrando {{desde}}–{{hasta}} de {{total}}",
+    "totalRegistros": "{{total}} registro(s)"
   },
   "metricasIA": {
     "titulo": "Métricas del modelo de IA",
@@ -366,5 +372,14 @@
   },
   "sesion": {
     "porExpirar": "Tu sesión expirará en {{restante}}. Guarda lo que estés haciendo."
+  },
+  "guia": {
+    "eyebrow": "Primeros pasos",
+    "titulo": "Cómo usar el sistema",
+    "descripcion": "Qué hace cada pantalla y en qué momento del día te sirve",
+    "rutinaTitulo": "La rutina de un día",
+    "seccionesTitulo": "Qué hace cada pantalla",
+    "conceptosTitulo": "Vocabulario del sistema",
+    "nota": "Solo se listan las pantallas que tu rol puede abrir. Si necesitas acceso a otra, pídeselo a un administrador."
   }
 }

@@ -42,7 +42,8 @@
     "seccionOperacion": "Operations",
     "seccionCumplimiento": "Compliance",
     "seccionAdministracion": "Administration",
-    "metricasIA": "AI metrics"
+    "metricasIA": "AI metrics",
+    "guia": "User guide"
   },
   "roles": {
     "administrador": "Technical Director (Pharmacist Chemist)",
@@ -334,7 +335,12 @@
     "cancelar": "Cancel",
     "sesionExpirada": "Your session expired. Please sign in again.",
     "sinPermiso": "You do not have permission to view this section.",
-    "idioma": "Language"
+    "idioma": "Language",
+    "paginacion": "Pagination",
+    "anterior": "Previous page",
+    "siguiente": "Next page",
+    "rangoMostrado": "Showing {{desde}}–{{hasta}} of {{total}}",
+    "totalRegistros": "{{total}} record(s)"
   },
   "metricasIA": {
     "titulo": "AI model metrics",
@@ -366,5 +372,14 @@
   },
   "sesion": {
     "porExpirar": "Your session expires in {{restante}}. Save your work."
+  },
+  "guia": {
+    "eyebrow": "Getting started",
+    "titulo": "How to use the system",
+    "descripcion": "What each screen does and when it helps you during the day",
+    "rutinaTitulo": "A day in the routine",
+    "seccionesTitulo": "What each screen does",
+    "conceptosTitulo": "System vocabulary",
+    "nota": "Only screens your role can open are listed. If you need access to another, ask an administrator."
   }
 }
