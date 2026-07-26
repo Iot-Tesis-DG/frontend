@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import axios from 'axios'
@@ -8,6 +8,10 @@ import { useAuthStore } from '@/application/stores/authStore'
 import { consumirMotivoAviso, type MotivoAviso } from '@/infrastructure/auth/avisoSesion'
 import { MODO_DEMO } from '@/infrastructure/demo/modoDemo'
 import type { Rol } from '@/domain/value-objects/Rol'
+import {
+  GOOGLE_HABILITADO,
+  montarBotonGoogle,
+} from '@/infrastructure/auth/googleIdentity'
 import { Button } from '../components/ui/button'
 import { Input, Label } from '../components/ui/input'
 import { LanguageSwitcher } from '../components/LanguageSwitcher'
@@ -53,6 +57,8 @@ export function LoginPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const login = useAuthStore((s) => s.login)
+  const loginConGoogle = useAuthStore((s) => s.loginConGoogle)
+  const contenedorGoogle = useRef<HTMLDivElement>(null)
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -93,6 +99,40 @@ export function LoginPage() {
     setError(null)
     setAvisoOAuth(t('login.proveedorNoDisponible', { proveedor }))
   }
+
+  // Monta el botón de Google solo si este build lo tiene configurado. Sin
+  // `VITE_GOOGLE_CLIENT_ID` no se contacta con Google en absoluto: una
+  // instalación que no usa el método no carga código de terceros.
+  useEffect(() => {
+    if (!GOOGLE_HABILITADO || !contenedorGoogle.current) return
+    let vigente = true
+
+    void montarBotonGoogle(contenedorGoogle.current, (idToken) => {
+      if (!vigente) return
+      setError(null)
+      setAvisoOAuth(null)
+      setCargando(true)
+      loginConGoogle(idToken)
+        .then(() => navigate('/dashboard', { replace: true }))
+        .catch((err: unknown) => {
+          // 401 aquí significa "esa cuenta no está dada de alta o está
+          // desactivada", no "la contraseña falló": el mensaje genérico de
+          // credenciales confundiría a quien sí tiene cuenta de Google válida.
+          setError(
+            axios.isAxiosError(err) && err.response?.status === 401
+              ? t('login.googleNoAutorizado')
+              : t('login.errorServidor'),
+          )
+        })
+        .finally(() => setCargando(false))
+    }).catch(() => {
+      if (vigente) setAvisoOAuth(t('login.googleNoDisponible'))
+    })
+
+    return () => {
+      vigente = false
+    }
+  }, [loginConGoogle, navigate, t])
 
   const entrarDemo = async (emailDemo: string) => {
     setError(null)
@@ -305,10 +345,21 @@ export function LoginPage() {
           </div>
 
           <div className="space-y-2.5 animate-rise" style={{ animationDelay: '260ms' }}>
-            <Button variant="secondary" className="w-full" onClick={() => oauthPendiente('Google')}>
-              <GoogleIcon />
-              {t('login.google')}
-            </Button>
+            {GOOGLE_HABILITADO ? (
+              // Contenedor del botón que renderiza Google. Se usa el suyo y no
+              // uno propio porque su política de marca lo exige y porque el
+              // flujo de credenciales queda dentro de su iframe.
+              <div ref={contenedorGoogle} data-testid="boton-google" className="min-h-11" />
+            ) : (
+              <Button
+                variant="secondary"
+                className="w-full"
+                onClick={() => oauthPendiente('Google')}
+              >
+                <GoogleIcon />
+                {t('login.google')}
+              </Button>
+            )}
             <Button
               variant="secondary"
               className="w-full"

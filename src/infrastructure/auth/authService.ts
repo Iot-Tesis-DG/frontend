@@ -28,6 +28,21 @@ export async function login(email: string, password: string): Promise<ResultadoL
   return { accessToken: data.access_token, requierePrivacidad: data.require_privacy_consent }
 }
 
+/**
+ * Canjea el ID token de Google por el JWT interno del sistema.
+ *
+ * Google solo acredita la identidad: el backend comprueba la firma contra el
+ * JWKS de Google y exige además que el correo esté dado de alta y activo en la
+ * tabla de usuarios. El token que vuelve es el mismo JWT que el del acceso con
+ * contraseña, así que el resto del frontend no distingue el método.
+ */
+export async function loginConGoogle(idToken: string): Promise<ResultadoLogin> {
+  const { data } = await apiClient.post<TokenResponse>('/api/auth/google', {
+    id_token: idToken,
+  })
+  return { accessToken: data.access_token, requierePrivacidad: data.require_privacy_consent }
+}
+
 /** Decodifica el payload del JWT (sin verificar firma: eso lo hace el backend). */
 export function decodificarSesion(token: string): SesionUsuario {
   const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')))

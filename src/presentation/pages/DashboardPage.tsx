@@ -10,6 +10,7 @@ import { EChartWrapper } from '@/infrastructure/charts/EChartWrapper'
 import { cn } from '@/lib/utils'
 import { PageHeader } from '../components/PageHeader'
 import { RiskBadge } from '../components/RiskBadge'
+import { Badge } from '../components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card'
 
 function formatearHora(iso: string): string {
@@ -315,9 +316,21 @@ export function DashboardPage() {
                   {t('dashboard.rangoConservacion')}
                 </CardDescription>
               </div>
-              <p className="text-xs text-faint">
+              {/* RF-18: el dashboard muestra el estado de conectividad del
+                  dispositivo. Es distinto del indicador SSE de la cabecera,
+                  que refleja la salud del stream del navegador, no la del nodo. */}
+              <p className="flex items-center gap-2 text-xs text-faint">
                 {t('dashboard.dispositivo')}:{' '}
                 <span className="nums text-ink-700">{ultima.device_id}</span>
+                <Badge
+                  variant={ultima.estado_conectividad === 'online' ? 'ok' : 'neutral'}
+                  dot
+                  data-testid="conectividad-dispositivo"
+                >
+                  {ultima.estado_conectividad === 'online'
+                    ? t('dashboard.dispositivoOnline')
+                    : t('dashboard.dispositivoOffline')}
+                </Badge>
               </p>
             </CardHeader>
             <CardContent>

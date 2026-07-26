@@ -1,7 +1,11 @@
 import { create } from 'zustand'
 
 import { apiClient, getAccessToken, setAccessToken } from '@/infrastructure/api/apiClient'
-import { decodificarSesion, login as loginService } from '@/infrastructure/auth/authService'
+import {
+  decodificarSesion,
+  login as loginService,
+  loginConGoogle as loginConGoogleService,
+} from '@/infrastructure/auth/authService'
 import type { SesionUsuario } from '@/infrastructure/auth/authService'
 import { limpiarSesionActiva, marcarSesionActiva } from '@/infrastructure/auth/avisoSesion'
 import { MODO_DEMO } from '@/infrastructure/demo/modoDemo'
@@ -11,6 +15,9 @@ interface AuthState {
   autenticado: boolean
   requierePrivacidad: boolean
   login: (email: string, password: string) => Promise<void>
+  /** RF-17: acceso alternativo. Recibe el ID token que emite Google en el
+   * navegador; la autorización la sigue resolviendo el backend. */
+  loginConGoogle: (idToken: string) => Promise<void>
   /**
    * `revocar: false` para el cierre provocado por una sesión ya expirada:
    * el token no sirve, así que pedir su revocación solo produciría un 401.
@@ -37,6 +44,24 @@ function restaurarSesionDemo(): SesionUsuario | null {
 const sesionRestaurada = restaurarSesionDemo()
 
 /**
+ * Efectos de abrir sesión, compartidos por todos los métodos de acceso.
+ *
+ * Extraído para que contraseña y Google no puedan divergir: si un método
+ * olvidara `marcarSesionActiva()`, el aviso de expiración no se armaría y la
+ * sesión moriría sin previo aviso en mitad de una revisión de alertas.
+ */
+function aplicarSesion(
+  set: (estado: Partial<AuthState>) => void,
+  accessToken: string,
+  requierePrivacidad: boolean,
+): void {
+  setAccessToken(accessToken)
+  marcarSesionActiva()
+  if (MODO_DEMO) sessionStorage.setItem(CLAVE_TOKEN_DEMO, accessToken)
+  set({ usuario: decodificarSesion(accessToken), autenticado: true, requierePrivacidad })
+}
+
+/**
  * Estado de sesión SOLO en memoria (sin persist): el stack prohíbe
  * localStorage para el JWT como mitigación de XSS (OWASP WSTG).
  */
@@ -47,10 +72,15 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   login: async (email, password) => {
     const { accessToken, requierePrivacidad } = await loginService(email, password)
-    setAccessToken(accessToken)
-    marcarSesionActiva()
-    if (MODO_DEMO) sessionStorage.setItem(CLAVE_TOKEN_DEMO, accessToken)
-    set({ usuario: decodificarSesion(accessToken), autenticado: true, requierePrivacidad })
+    aplicarSesion(set, accessToken, requierePrivacidad)
+  },
+
+  loginConGoogle: async (idToken) => {
+    const { accessToken, requierePrivacidad } = await loginConGoogleService(idToken)
+    // Misma sesión resultante que con contraseña: el token es el JWT interno,
+    // no el de Google. Si se guardara el de Google, el resto del sistema no
+    // podría leer el rol ni la expiración que gobiernan el RBAC.
+    aplicarSesion(set, accessToken, requierePrivacidad)
   },
 
   logout: ({ revocar = true } = {}) => {

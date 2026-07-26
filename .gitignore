@@ -5,3 +5,6 @@ dist/
 *.tsbuildinfo
 .DS_Store
 .vercel
+
+# Cobertura de pruebas
+coverage/

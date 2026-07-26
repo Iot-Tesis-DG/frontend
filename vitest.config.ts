@@ -22,5 +22,20 @@ export default defineConfig({
     // que una prueba de sesión cerrada dependiera del orden de ejecución.
     isolate: true,
     restoreMocks: true,
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html'],
+      // Solo el código propio: los tipos no ejecutan nada, `main.tsx` es el
+      // arranque de Vite y la capa demo son datos simulados para la
+      // presentación, no lógica que una prueba deba cubrir.
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: [
+        'src/tests/**',
+        'src/main.tsx',
+        'src/vite-env.d.ts',
+        'src/infrastructure/demo/**',
+        'src/**/*.d.ts',
+      ],
+    },
   },
 })
