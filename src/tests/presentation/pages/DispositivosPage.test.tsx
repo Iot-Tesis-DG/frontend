@@ -45,11 +45,14 @@ describe('DispositivosPage (HU-43, RF-18)', () => {
   })
 
   it('distingue un nodo en línea de uno sin conexión', () => {
+    // El estado se muestra traducido, no como el literal del backend: la
+    // interfaz es bilingüe y «online»/«offline» eran las dos únicas cadenas
+    // que se colaban sin pasar por i18n.
     montar([dispositivo({ id: 'FARM-01-CDL', estado_conectividad: 'online' })])
-    expect(screen.getByText('online')).toBeInTheDocument()
+    expect(screen.getByText('En línea')).toBeInTheDocument()
 
     montar([dispositivo({ id: 'FARM-02-CDL', estado_conectividad: 'offline' })])
-    expect(screen.getByText('offline')).toBeInTheDocument()
+    expect(screen.getByText('Sin conexión')).toBeInTheDocument()
   })
 
   it('marca visiblemente un dispositivo dado de baja', () => {

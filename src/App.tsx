@@ -1,12 +1,11 @@
 import { Suspense, lazy, useEffect, type ComponentType, type ReactNode } from 'react'
 import { BrowserRouter, Navigate, Route, Routes, useNavigate } from 'react-router'
+import { useTranslation } from 'react-i18next'
 
 import { setOnSesionExpirada } from '@/infrastructure/api/apiClient'
 import { marcarSesionExpirada } from '@/infrastructure/auth/avisoSesion'
 import { useAuthStore } from '@/application/stores/authStore'
-import { AppLayout } from '@/presentation/layouts/AppLayout'
 import { ErrorBoundary } from '@/presentation/components/ErrorBoundary'
-import { PrivacyConsentModal } from '@/presentation/components/PrivacyConsentModal'
 import { RequireAuth, RequireRoles } from '@/presentation/components/RouteGuards'
 import { LoginPage } from '@/presentation/pages/LoginPage'
 
@@ -23,6 +22,19 @@ function diferida<T extends Record<string, ComponentType>>(
 ) {
   return lazy(async () => ({ default: (await cargar())[nombre] }))
 }
+
+/**
+ * RNF-10 (carga ≤ 3 s). El layout y el modal de privacidad se importaban de
+ * forma directa, así que la pantalla de login —la única que ve quien todavía
+ * no ha entrado— arrastraba Radix Dialog, el bloqueo de scroll y los doce
+ * iconos de la navegación antes de poder pintar el formulario. Ninguno de los
+ * dos hace falta hasta después de autenticarse.
+ */
+const AppLayout = diferida(() => import('@/presentation/layouts/AppLayout'), 'AppLayout')
+const PrivacyConsentModal = diferida(
+  () => import('@/presentation/components/PrivacyConsentModal'),
+  'PrivacyConsentModal',
+)
 
 const GuiaPage = diferida(() => import('@/presentation/pages/GuiaPage'), 'GuiaPage')
 const DashboardPage = diferida(() => import('@/presentation/pages/DashboardPage'), 'DashboardPage')
@@ -49,10 +61,23 @@ const DispositivosPage = diferida(
 )
 const FirmwarePage = diferida(() => import('@/presentation/pages/FirmwarePage'), 'FirmwarePage')
 
-function Pagina({ children }: { children: ReactNode }) {
+/**
+ * El respaldo de `Suspense` era un «…» suelto: sin texto real y sin rol, el
+ * lector de pantalla solo percibía que la página se había vaciado. WCAG 4.1.3
+ * pide que un cambio de estado como «cargando» se comunique sin robar el foco,
+ * de ahí `role="status"`.
+ */
+function RespaldoCarga() {
+  const { t } = useTranslation()
   return (
-    <Suspense fallback={<p className="animate-fade p-8 text-sm text-muted">…</p>}>{children}</Suspense>
+    <p role="status" aria-live="polite" className="animate-fade p-8 text-sm text-muted">
+      {t('app.cargando')}
+    </p>
   )
+}
+
+function Pagina({ children }: { children: ReactNode }) {
+  return <Suspense fallback={<RespaldoCarga />}>{children}</Suspense>
 }
 
 function SesionExpiradaListener() {
@@ -83,7 +108,7 @@ export function App() {
           <Route path="/login" element={<LoginPage />} />
 
           <Route element={<RequireAuth />}>
-            <Route element={<AppLayout />}>
+            <Route element={<Pagina><AppLayout /></Pagina>}>
               <Route path="/guia" element={<Pagina><GuiaPage /></Pagina>} />
               <Route path="/dashboard" element={<Pagina><DashboardPage /></Pagina>} />
               <Route path="/historial" element={<Pagina><HistorialPage /></Pagina>} />
@@ -107,7 +132,9 @@ export function App() {
 
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
-        <PrivacyConsentModal />
+        <Suspense fallback={null}>
+          <PrivacyConsentModal />
+        </Suspense>
       </BrowserRouter>
     </ErrorBoundary>
   )

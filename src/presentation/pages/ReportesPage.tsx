@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Download, FileDown, FileText } from 'lucide-react'
+import { Download, FileDown, FileText, FileSearch } from 'lucide-react'
 
-import { useReportesBPA } from '@/application/hooks/useReportesBPA'
+import { useReportesBPA, MAX_DIAS_RANGO_REPORTE, diasDeRango } from '@/application/hooks/useReportesBPA'
+import { fechaCorta } from '@/lib/formato'
+import { EstadoVacio } from '../components/EstadoPagina'
 import { PageHeader } from '../components/PageHeader'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
@@ -22,6 +24,23 @@ export function ReportesPage() {
   const [desde, setDesde] = useState(hoyISO(-30))
   const [hasta, setHasta] = useState(hoyISO())
   const [deviceId, setDeviceId] = useState('')
+
+  // El periodo se mide y se muestra antes de enviar nada: el backend rechaza
+  // con 400 los rangos invertidos y los de más de 366 días, y además el
+  // endpoint tiene cuota propia (10/min por usuario). Avisar aquí evita gastar
+  // un intento en una petición que se sabe inválida.
+  const dias = diasDeRango(desde, hasta)
+  const rangoInvalido = dias < 0 || dias > MAX_DIAS_RANGO_REPORTE
+  const mensajeError =
+    error === null
+      ? null
+      : error === 'rango_invertido'
+        ? t('reportes.errorRangoInvertido')
+        : error === 'periodo_excesivo'
+          ? t('reportes.errorPeriodoExcesivo', { max: MAX_DIAS_RANGO_REPORTE })
+          : error === 'cuota'
+            ? t('reportes.errorCuota')
+            : t('reportes.errorGenerar')
 
   return (
     <div className="max-w-3xl">
@@ -48,6 +67,7 @@ export function ReportesPage() {
                 required
                 value={desde}
                 onChange={(e) => setDesde(e.target.value)}
+                aria-describedby="reportes-periodo"
               />
             </div>
             <div>
@@ -56,8 +76,10 @@ export function ReportesPage() {
                 id="r-hasta"
                 type="date"
                 required
+                min={desde}
                 value={hasta}
                 onChange={(e) => setHasta(e.target.value)}
+                aria-describedby="reportes-periodo"
               />
             </div>
             <div>
@@ -69,14 +91,22 @@ export function ReportesPage() {
                 placeholder="FARM-01-CDL"
               />
             </div>
-            <Button type="submit" disabled={generando}>
+            <Button type="submit" disabled={generando || rangoInvalido}>
               <FileText />
               {generando ? t('reportes.generando') : t('reportes.generar')}
             </Button>
           </form>
-          {error && (
-            <p role="alert" className="mt-3 rounded-(--radius-field) bg-clay-100 px-3 py-2 text-[13px] text-clay-700">
-              {t('reportes.errorGenerar')}
+
+          <p id="reportes-periodo" role="status" className="mt-3 text-xs text-faint">
+            {dias >= 0 && t('reportes.periodoDias', { dias: dias + 1 })}
+          </p>
+
+          {mensajeError && (
+            <p
+              role="alert"
+              className="mt-3 rounded-(--radius-field) bg-clay-100 px-3 py-2 text-[13px] text-clay-700"
+            >
+              {mensajeError}
             </p>
           )}
         </CardContent>
@@ -84,7 +114,11 @@ export function ReportesPage() {
 
       {/* ── Resumen ─────────────────────────────────────────── */}
       {reporte === null ? (
-        <p className="animate-fade text-sm text-muted">{t('reportes.sinReporte')}</p>
+        <EstadoVacio
+          icono={FileSearch}
+          titulo={t('reportes.sinReporte')}
+          detalle={t('reportes.sinReporteDetalle')}
+        />
       ) : (
         <Card className="animate-rise">
           <CardHeader className="gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -95,7 +129,7 @@ export function ReportesPage() {
                   JSON son extracciones de datos, no evidencia firmada. */}
               <Button
                 size="sm"
-                disabled={descargandoPdf}
+                disabled={descargandoPdf || rangoInvalido}
                 onClick={() => void descargarPdf(desde, hasta, deviceId || undefined)}
               >
                 <FileDown />
@@ -127,8 +161,7 @@ export function ReportesPage() {
               ))}
             </dl>
             <p className="nums mt-4 text-center text-xs text-faint">
-              {new Date(reporte.fecha_desde).toLocaleDateString('es-PE')} —{' '}
-              {new Date(reporte.fecha_hasta).toLocaleDateString('es-PE')}
+              {fechaCorta(reporte.fecha_desde)} — {fechaCorta(reporte.fecha_hasta)}
               {reporte.device_id && ` · ${reporte.device_id}`}
             </p>
             <p className="mt-3 border-t border-border pt-3 text-center text-xs leading-relaxed text-muted">

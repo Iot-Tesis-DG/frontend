@@ -17,4 +17,18 @@ i18n.use(initReactI18next).init({
   },
 })
 
+/**
+ * WCAG 3.1.1 (Idioma de la página) y 3.1.2: `index.html` declara `lang="es"` de
+ * forma estática, así que al pasar a inglés el lector de pantalla seguía
+ * leyendo el interfaz con las reglas de pronunciación del español. El atributo
+ * se sincroniza con el idioma resuelto en cada cambio.
+ */
+export function sincronizarIdiomaDocumento(idioma: string | undefined): void {
+  if (typeof document === 'undefined') return
+  document.documentElement.lang = idioma ?? 'es'
+}
+
+sincronizarIdiomaDocumento(i18n.resolvedLanguage)
+i18n.on('languageChanged', () => sincronizarIdiomaDocumento(i18n.resolvedLanguage))
+
 export default i18n

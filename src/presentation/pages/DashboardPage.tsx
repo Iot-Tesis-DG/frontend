@@ -7,19 +7,14 @@ import { DoorClosed, DoorOpen, Droplets, RadioTower, Thermometer, Wind } from 'l
 import { useMonitoreoTermico } from '@/application/hooks/useMonitoreoTermico'
 import type { LecturaTermica } from '@/domain/entities/LecturaTermica'
 import { EChartWrapper } from '@/infrastructure/charts/EChartWrapper'
+import { hora as formatearHora } from '@/lib/formato'
 import { cn } from '@/lib/utils'
+import { AnuncioRiesgo } from '../components/AnuncioRiesgo'
 import { PageHeader } from '../components/PageHeader'
 import { RiskBadge } from '../components/RiskBadge'
+import { TablaAlternativa } from '../components/TablaAlternativa'
 import { Badge } from '../components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card'
-
-function formatearHora(iso: string): string {
-  return new Date(iso).toLocaleTimeString('es-PE', {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  })
-}
 
 function TarjetaMetrica({
   etiqueta,
@@ -105,14 +100,14 @@ function construirOpcionCurva(serie: LecturaTermica[], etiquetas: {
       boundaryGap: false,
       axisLine: { lineStyle: { color: '#e1d7bd' } },
       axisTick: { show: false },
-      axisLabel: { fontSize: 11, color: '#9c8d81' },
+      axisLabel: { fontSize: 11, color: '#7d6d5f' },
     },
     yAxis: {
       type: 'value',
       min: (value: { min: number }) => Math.floor(Math.min(value.min, 0)),
       max: (value: { max: number }) => Math.ceil(Math.max(value.max, 10)),
       splitLine: { lineStyle: { color: '#efe9d6' } },
-      axisLabel: { fontSize: 11, color: '#9c8d81', formatter: '{value} °C' },
+      axisLabel: { fontSize: 11, color: '#7d6d5f', formatter: '{value} °C' },
     },
     series: [
       {
@@ -152,8 +147,8 @@ function construirOpcionCurva(serie: LecturaTermica[], etiquetas: {
         smooth: true,
         symbol: 'none',
         data: serie.map((l) => l.temperatura_ambiental),
-        lineStyle: { width: 1.5, color: '#9c8d81', type: 'dashed' },
-        itemStyle: { color: '#9c8d81' },
+        lineStyle: { width: 1.5, color: '#7d6d5f', type: 'dashed' },
+        itemStyle: { color: '#7d6d5f' },
       },
     ],
   }
@@ -195,6 +190,9 @@ export function DashboardPage() {
 
   return (
     <div>
+      {/* RF-11 + WCAG 4.1.3: la excursión térmica que llega por SSE se anuncia. */}
+      <AnuncioRiesgo nivel={ultima?.nivel_riesgo ?? null} temperatura={ultima?.temperatura_interna} />
+
       <PageHeader eyebrow={t('nav.seccionOperacion')} titulo={t('dashboard.titulo')} descripcion={t('dashboard.descripcion')}>
         <span
           className={cn(
@@ -334,7 +332,28 @@ export function DashboardPage() {
               </p>
             </CardHeader>
             <CardContent>
-              <EChartWrapper option={opcionCurva} height="320px" />
+              <EChartWrapper
+                option={opcionCurva}
+                height="320px"
+                ariaLabel={t('dashboard.graficaEtiqueta', { n: serie.length })}
+                ariaDescribedBy="curva-termica-datos"
+              />
+              <TablaAlternativa
+                id="curva-termica-datos"
+                titulo={t('dashboard.graficaEtiqueta', { n: serie.length })}
+                columnas={[
+                  t('historial.fecha'),
+                  t('dashboard.tempInterna'),
+                  t('dashboard.tempAmbiental'),
+                  t('historial.riesgo'),
+                ]}
+                filas={serie.map((l) => [
+                  formatearHora(l.timestamp),
+                  l.temperatura_interna?.toFixed(1) ?? '—',
+                  l.temperatura_ambiental?.toFixed(1) ?? '—',
+                  l.nivel_riesgo ? t(`riesgo.${l.nivel_riesgo}`) : '—',
+                ])}
+              />
 
               {/* Resumen editorial de la ventana visible */}
               {resumen && (

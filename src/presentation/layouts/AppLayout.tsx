@@ -105,8 +105,23 @@ function BadgeDemo({ className }: { className?: string }) {
   )
 }
 
-/** Contenido del sidebar, compartido entre escritorio y el drawer móvil. */
-function ContenidoSidebar({ alNavegar }: { alNavegar?: () => void }) {
+/**
+ * Contenido del sidebar, compartido entre escritorio y el drawer móvil.
+ *
+ * `sufijoId` distingue las dos instancias: con el drawer abierto hay dos `nav`
+ * en el documento y dos juegos de encabezados de sección. Sin nombres
+ * distintos, la lista de regiones del lector de pantalla mostraba dos entradas
+ * idénticas y los `id` de `aria-labelledby` quedaban duplicados.
+ */
+function ContenidoSidebar({
+  alNavegar,
+  etiquetaNav,
+  sufijoId,
+}: {
+  alNavegar?: () => void
+  etiquetaNav: string
+  sufijoId: string
+}) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const usuario = useAuthStore((s) => s.usuario)
@@ -121,17 +136,18 @@ function ContenidoSidebar({ alNavegar }: { alNavegar?: () => void }) {
 
   return (
     <>
-      <nav className="flex-1 space-y-5 overflow-y-auto px-3 pb-4">
+      <nav aria-label={etiquetaNav} className="flex-1 space-y-5 overflow-y-auto px-3 pb-4">
         {SECCIONES.map((seccion) => {
           const visibles = seccion.items.filter((item) => tienePermiso(usuario.rol, item.roles))
           if (visibles.length === 0) return null
+          const idTitulo = `${sufijoId}-${seccion.claveI18n.replace(/\./g, '-')}`
           return (
             <div key={seccion.claveI18n}>
-              <p className="eyebrow mb-1.5 flex items-center gap-2 px-2">
+              <p id={idTitulo} className="eyebrow mb-1.5 flex items-center gap-2 px-2">
                 {t(seccion.claveI18n)}
                 <span className="h-px flex-1 bg-border/80" aria-hidden />
               </p>
-              <ul className="space-y-0.5">
+              <ul aria-labelledby={idTitulo} className="space-y-0.5">
                 {visibles.map((item) => (
                   <li key={item.ruta}>
                     <NavLink
@@ -212,12 +228,23 @@ export function AppLayout() {
 
   return (
     <div className="flex min-h-dvh">
+      {/* WCAG 2.4.1 (Evitar bloques): la navegación son doce enlaces repetidos
+          en cada página. Sin este atajo, llegar al contenido con el teclado
+          exigía atravesarlos uno a uno en todas las rutas. Se mantiene oculto
+          hasta recibir el foco. */}
+      <a
+        href="#contenido-principal"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-(--radius-field) focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-cream-50 focus:shadow-(--shadow-raised)"
+      >
+        {t('nav.saltarAlContenido')}
+      </a>
+
       {/* ── Sidebar de escritorio ────────────────────────────── */}
       <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col border-r border-border bg-gradient-to-b from-cream-100/90 to-cream-100/50 lg:flex">
         <div className="px-5 pb-5 pt-6">
           <MarcaApp />
         </div>
-        <ContenidoSidebar />
+        <ContenidoSidebar etiquetaNav={t('nav.principal')} sufijoId="nav-escritorio" />
       </aside>
 
       {/* ── Drawer móvil ─────────────────────────────────────── */}
@@ -238,7 +265,11 @@ export function AppLayout() {
                 <X className="size-4.5" />
               </DialogPrimitive.Close>
             </div>
-            <ContenidoSidebar alNavegar={() => setDrawerAbierto(false)} />
+            <ContenidoSidebar
+              alNavegar={() => setDrawerAbierto(false)}
+              etiquetaNav={t('nav.principalMovil')}
+              sufijoId="nav-movil"
+            />
           </DialogPrimitive.Content>
         </DialogPrimitive.Portal>
 
@@ -273,7 +304,12 @@ export function AppLayout() {
             </div>
           </header>
 
-          <main className="flex-1 px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
+          <main
+            id="contenido-principal"
+            tabIndex={-1}
+            aria-label={t('nav.contenidoPrincipal')}
+            className="flex-1 px-4 py-5 focus:outline-none sm:px-6 sm:py-6 lg:px-8"
+          >
             {/* Tope de ancho: en monitores muy anchos el contenido no se estira sin fin */}
             <div className="mx-auto w-full max-w-[1400px]">
               <Outlet />

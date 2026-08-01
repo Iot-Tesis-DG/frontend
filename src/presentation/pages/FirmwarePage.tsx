@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DownloadCloud, PackagePlus } from 'lucide-react'
 
+import { fechaHora } from '@/lib/formato'
 import { useFirmware } from '@/application/hooks/useFirmware'
 import type { FirmwareDespliegue } from '@/domain/entities/Firmware'
 import { rangoPagina } from '@/lib/paginacion'
@@ -166,7 +167,7 @@ export function FirmwarePage() {
 
       {/* ── Releases ─────────────────────────────────────────── */}
       <div className="animate-rise" style={{ animationDelay: '60ms' }}>
-        <Table>
+        <Table titulo={t('firmware.titulo')} cargando={cargando}>
           <TableHeader>
             <TableRow>
               <TableHead>{t('firmware.version')}</TableHead>
@@ -179,17 +180,26 @@ export function FirmwarePage() {
             {cargando ? (
               <TableEmpty colSpan={4}>{t('app.cargando')}</TableEmpty>
             ) : releases.length === 0 ? (
-              <TableEmpty colSpan={4}>{t('firmware.sinReleases')}</TableEmpty>
+              <TableEmpty colSpan={4}>
+                <span className="inline-flex flex-col items-center gap-2">
+                  <PackagePlus className="size-5 text-faint" aria-hidden />
+                  {t('firmware.sinReleases')}
+                </span>
+              </TableEmpty>
             ) : (
               visibles.map((release) => (
                 <TableRow key={release.id}>
                   <TableCell className="font-medium">{release.version}</TableCell>
-                  <TableCell className="nums text-xs text-muted" title={release.hash_sha256}>
+                  <TableCell className="nums text-xs text-muted">
                     {release.hash_sha256.slice(0, 12)}…
+                    {/* El hash completo estaba solo en `title`, que el teclado
+                        no alcanza. Es el dato que se coteja al validar una
+                        release, así que tiene que ser recuperable. */}
+                    <span className="sr-only">{release.hash_sha256}</span>
                   </TableCell>
                   <TableCell className="text-[13px]">{release.descripcion}</TableCell>
                   <TableCell className="nums text-[13px] text-muted">
-                    {new Date(release.fecha_compilacion).toLocaleString('es-PE')}
+                    {fechaHora(release.fecha_compilacion)}
                   </TableCell>
                 </TableRow>
               ))

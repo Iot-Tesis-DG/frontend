@@ -2,7 +2,14 @@ import { render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const useReportesBPA = vi.hoisted(() => vi.fn())
-vi.mock('@/application/hooks/useReportesBPA', () => ({ useReportesBPA }))
+// `importOriginal`: solo se sustituye el hook. `diasDeRango`,
+// `validarRango` y `MAX_DIAS_RANGO_REPORTE` son funciones puras que replican
+// las validaciones del backend; simularlas ocultaría justo lo que interesa
+// comprobar.
+vi.mock('@/application/hooks/useReportesBPA', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/application/hooks/useReportesBPA')>()),
+  useReportesBPA,
+}))
 
 import { ReportesPage } from '@/presentation/pages/ReportesPage'
 

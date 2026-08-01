@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { ScrollText } from 'lucide-react'
 
 import { useAuditoria } from '@/application/hooks/useAuditoria'
+import { fechaHora } from '@/lib/formato'
 import { rangoPagina } from '@/lib/paginacion'
 import { Paginacion } from '../components/Paginacion'
 import { PageHeader } from '../components/PageHeader'
@@ -33,7 +34,7 @@ export function AuditoriaPage() {
       <PageHeader eyebrow={t('nav.seccionAdministracion')} titulo={t('auditoria.titulo')} descripcion={t('auditoria.descripcion')} />
 
       <div className="animate-rise">
-        <Table>
+        <Table titulo={t('auditoria.titulo')} cargando={cargando}>
           <TableHeader>
             <TableRow>
               <TableHead>{t('auditoria.fecha')}</TableHead>
@@ -49,7 +50,7 @@ export function AuditoriaPage() {
             ) : registros.length === 0 ? (
               <TableEmpty colSpan={5}>
                 <span className="inline-flex flex-col items-center gap-2">
-                  <ScrollText className="size-5 text-faint" />
+                  <ScrollText className="size-5 text-faint" aria-hidden />
                   {t('auditoria.sinRegistros')}
                 </span>
               </TableEmpty>
@@ -57,7 +58,7 @@ export function AuditoriaPage() {
               visibles.map((registro) => (
                 <TableRow key={registro.id}>
                   <TableCell className="nums text-[13px]">
-                    {new Date(registro.created_at).toLocaleString('es-PE')}
+                    {fechaHora(registro.created_at)}
                   </TableCell>
                   <TableCell>
                     <Badge variant="neutral">{registro.accion}</Badge>

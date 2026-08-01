@@ -56,7 +56,11 @@ describe('AlertasPage (RF-09, RF-10, HU-20/21/27)', () => {
     montar([alerta()])
 
     expect(screen.getByText('FARM-01-CDL')).toBeInTheDocument()
-    expect(screen.getByText(/fuera del rango/i)).toBeInTheDocument()
+    // `getAllByText`: el detalle del semáforo de riesgo («Fuera del rango
+    // 2–8 °C…») se expone ahora como texto para lector de pantalla dentro de
+    // la píldora, así que la frase aparece también fuera del mensaje.
+    expect(screen.getAllByText(/fuera del rango/i).length).toBeGreaterThan(0)
+    expect(screen.getByRole('cell', { name: /fuera del rango 2-8/i })).toBeInTheDocument()
   })
 
   it('ofrece los tres filtros de revisión', () => {

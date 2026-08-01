@@ -1,9 +1,33 @@
 import { cn } from '@/lib/utils'
 
-export function Table({ className, ...props }: React.TableHTMLAttributes<HTMLTableElement>) {
+interface TableProps extends React.TableHTMLAttributes<HTMLTableElement> {
+  /**
+   * Nombre accesible de la tabla, expuesto como `<caption>` oculto.
+   * Las páginas apilan varias tablas y listas; sin título, el lector de
+   * pantalla las enumera todas como «tabla, 7 columnas» y no hay forma de
+   * saber cuál se está recorriendo (WCAG 1.3.1).
+   */
+  titulo?: string
+  /** Consulta en curso: marca la región como ocupada (WCAG 4.1.3). */
+  cargando?: boolean
+}
+
+export function Table({ className, titulo, cargando, children, ...props }: TableProps) {
   return (
-    <div className="w-full overflow-x-auto rounded-(--radius-card) border border-border bg-surface shadow-(--shadow-card)">
-      <table className={cn('w-full min-w-[560px] caption-bottom text-sm', className)} {...props} />
+    <div
+      // El contenedor con scroll horizontal debe ser alcanzable por teclado:
+      // sin `tabindex`, en móvil la tabla se desplaza con el dedo pero no con
+      // el tabulador ni las flechas (WCAG 2.1.1).
+      tabIndex={0}
+      role="region"
+      aria-label={titulo}
+      aria-busy={cargando || undefined}
+      className="w-full overflow-x-auto rounded-(--radius-card) border border-border bg-surface shadow-(--shadow-card)"
+    >
+      <table className={cn('w-full min-w-[560px] caption-bottom text-sm', className)} {...props}>
+        {titulo && <caption className="sr-only">{titulo}</caption>}
+        {children}
+      </table>
     </div>
   )
 }
@@ -25,9 +49,14 @@ export function TableRow({ className, ...props }: React.HTMLAttributes<HTMLTable
   )
 }
 
-export function TableHead({ className, ...props }: React.ThHTMLAttributes<HTMLTableCellElement>) {
+export function TableHead({
+  className,
+  scope = 'col',
+  ...props
+}: React.ThHTMLAttributes<HTMLTableCellElement>) {
   return (
     <th
+      scope={scope}
       className={cn(
         'h-10 px-4 text-left align-middle text-[11px] font-semibold uppercase tracking-[0.08em] text-faint',
         className,

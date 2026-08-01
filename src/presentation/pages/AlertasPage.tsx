@@ -6,6 +6,7 @@ import { useAlertas, type FiltroRevision } from '@/application/hooks/useAlertas'
 import { useAuthStore } from '@/application/stores/authStore'
 import { tienePermiso } from '@/domain/value-objects/Rol'
 import type { AlertaTermica } from '@/domain/entities/AlertaTermica'
+import { fechaHora } from '@/lib/formato'
 import { cn } from '@/lib/utils'
 import { rangoPagina } from '@/lib/paginacion'
 import { Paginacion } from '../components/Paginacion'
@@ -19,7 +20,7 @@ import {
   DialogDescription,
   DialogTitle,
 } from '../components/ui/dialog'
-import { Textarea } from '../components/ui/input'
+import { Label, Textarea } from '../components/ui/input'
 import {
   Table,
   TableBody,
@@ -67,7 +68,11 @@ export function AlertasPage() {
   return (
     <div>
       <PageHeader eyebrow={t('nav.seccionOperacion')} titulo={t('alertas.titulo')} descripcion={t('alertas.descripcion')}>
-        <div className="inline-flex rounded-full border border-border-strong bg-surface p-0.5">
+        <div
+          role="group"
+          aria-label={t('alertas.filtroEstado')}
+          className="inline-flex rounded-full border border-border-strong bg-surface p-0.5"
+        >
           {FILTROS.map((opcion) => (
             <button
               key={opcion}
@@ -88,7 +93,7 @@ export function AlertasPage() {
       </PageHeader>
 
       <div className="animate-rise">
-        <Table>
+        <Table titulo={t('alertas.titulo')} cargando={cargando}>
           <TableHeader>
             <TableRow>
               <TableHead>{t('alertas.fecha')}</TableHead>
@@ -113,7 +118,7 @@ export function AlertasPage() {
               visibles.map((alerta) => (
                 <TableRow key={alerta.id}>
                   <TableCell className="nums text-[13px]">
-                    {alerta.created_at ? new Date(alerta.created_at).toLocaleString('es-PE') : '—'}
+                    {fechaHora(alerta.created_at)}
                   </TableCell>
                   <TableCell className="text-[13px]">{alerta.device_id}</TableCell>
                   <TableCell>
@@ -174,14 +179,25 @@ export function AlertasPage() {
           <DialogTitle>{t('alertas.registrarAccion')}</DialogTitle>
           <DialogDescription>{alertaSeleccionada?.mensaje}</DialogDescription>
           <div className="mt-4 space-y-3">
-            <Textarea
-              value={descripcionAccion}
-              onChange={(e) => setDescripcionAccion(e.target.value)}
-              placeholder={t('alertas.descripcionAccion')}
-              maxLength={2000}
-            />
+            <div>
+              <Label htmlFor="accion-descripcion">{t('alertas.etiquetaAccion')}</Label>
+              <Textarea
+                id="accion-descripcion"
+                value={descripcionAccion}
+                onChange={(e) => setDescripcionAccion(e.target.value)}
+                placeholder={t('alertas.descripcionAccionPlaceholder')}
+                maxLength={2000}
+                aria-describedby="accion-ayuda"
+              />
+              <p id="accion-ayuda" className="mt-1 text-xs text-faint">
+                {t('alertas.descripcionAccionAyuda')}
+              </p>
+            </div>
             {mensajeExito && (
-              <p className="rounded-(--radius-field) bg-pine-100 px-3 py-2 text-[13px] text-pine-700">
+              <p
+                role="status"
+                className="rounded-(--radius-field) bg-pine-100 px-3 py-2 text-[13px] text-pine-700"
+              >
                 {t('alertas.accionRegistrada')}
               </p>
             )}

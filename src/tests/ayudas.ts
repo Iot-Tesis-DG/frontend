@@ -31,6 +31,10 @@ export interface PeticionCapturada {
   method: string
   headers: Record<string, unknown>
   data: unknown
+  /** Parámetros de consulta. Sin ellos no se puede afirmar sobre los filtros
+   *  que el frontend envía de verdad al backend (fechas del reporte BPA,
+   *  `device_id`, `limite`…), que es donde vive el contrato entre ambos. */
+  params: Record<string, unknown>
 }
 
 type Respondedor = (config: AxiosRequestConfig) => { status?: number; data?: unknown }
@@ -51,6 +55,7 @@ export function instalarAdaptadorFalso(responder: Respondedor = () => ({})) {
       method: (config.method ?? 'get').toLowerCase(),
       headers: { ...(config.headers as Record<string, unknown>) },
       data: config.data,
+      params: { ...((config.params ?? {}) as Record<string, unknown>) },
     })
     const { status = 200, data = {} } = responder(config)
     const respuesta = {

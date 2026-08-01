@@ -4,6 +4,7 @@ import { DoorClosed, DoorOpen, FilterX, SlidersHorizontal } from 'lucide-react'
 
 import { useHistorial, type FiltrosHistorial } from '@/application/hooks/useHistorial'
 import { NIVELES_RIESGO } from '@/domain/value-objects/NivelRiesgo'
+import { fechaHora } from '@/lib/formato'
 import { rangoPagina } from '@/lib/paginacion'
 import { Paginacion } from '../components/Paginacion'
 import { PageHeader } from '../components/PageHeader'
@@ -51,11 +52,15 @@ export function HistorialPage() {
       {/* ── Filtros ─────────────────────────────────────────── */}
       <Card className="mb-5 animate-rise">
         <CardContent className="p-5">
-          <p className="mb-3 flex items-center gap-2 text-[13px] font-medium text-muted">
-            <SlidersHorizontal className="size-3.5" />
+          <p
+            id="titulo-filtros-historial"
+            className="mb-3 flex items-center gap-2 text-[13px] font-medium text-muted"
+          >
+            <SlidersHorizontal className="size-3.5" aria-hidden />
             {t('historial.filtros')}
           </p>
           <form
+            aria-labelledby="titulo-filtros-historial"
             className="grid grid-cols-1 items-end gap-3 min-[480px]:grid-cols-2 lg:grid-cols-5"
             onSubmit={(e) => {
               e.preventDefault()
@@ -118,7 +123,7 @@ export function HistorialPage() {
 
       {/* ── Tabla ───────────────────────────────────────────── */}
       <div className="animate-rise" style={{ animationDelay: '60ms' }}>
-        <Table>
+        <Table titulo={t('historial.titulo')} cargando={cargando}>
           <TableHeader>
             <TableRow>
               <TableHead>{t('historial.fecha')}</TableHead>
@@ -139,7 +144,7 @@ export function HistorialPage() {
               visibles.map((lectura) => (
                 <TableRow key={lectura.id}>
                   <TableCell className="nums text-[13px]">
-                    {new Date(lectura.timestamp).toLocaleString('es-PE')}
+                    {fechaHora(lectura.timestamp)}
                   </TableCell>
                   <TableCell className="text-[13px]">{lectura.device_id}</TableCell>
                   <TableCell className="nums text-right font-medium">
@@ -153,9 +158,9 @@ export function HistorialPage() {
                   </TableCell>
                   <TableCell>
                     {lectura.apertura_refrigerador ? (
-                      <DoorOpen className="size-4 text-honey-600" aria-label={t('dashboard.puertaAbierta')} />
+                      <DoorOpen role="img" className="size-4 text-honey-600" aria-label={t('dashboard.puertaAbierta')} />
                     ) : (
-                      <DoorClosed className="size-4 text-faint" aria-label={t('dashboard.puertaCerrada')} />
+                      <DoorClosed role="img" className="size-4 text-faint" aria-label={t('dashboard.puertaCerrada')} />
                     )}
                   </TableCell>
                   <TableCell>

@@ -43,7 +43,11 @@
     "seccionCumplimiento": "Cumplimiento",
     "seccionAdministracion": "Administración",
     "metricasIA": "Métricas IA",
-    "guia": "Guía de uso"
+    "guia": "Guía de uso",
+    "saltarAlContenido": "Saltar al contenido principal",
+    "principal": "Navegación principal",
+    "principalMovil": "Navegación principal (menú móvil)",
+    "contenidoPrincipal": "Contenido principal"
   },
   "roles": {
     "administrador": "Director Técnico (Químico Farmacéutico)",
@@ -104,7 +108,10 @@
     "resumenMinima": "Mínima",
     "resumenMaxima": "Máxima",
     "resumenPromedio": "Promedio",
-    "resumenFueraRango": "Fuera de rango"
+    "resumenFueraRango": "Fuera de rango",
+    "graficaEtiqueta": "Gráfica de líneas: temperatura interna y ambiental de las últimas {{n}} lecturas, con el rango de conservación 2–8 °C marcado",
+    "anuncioRiesgo": "{{nivel}}. Temperatura interna {{temperatura}} °C.",
+    "anuncioRiesgoSinTemp": "{{nivel}}. Sin lectura de temperatura interna."
   },
   "demo": {
     "badge": "Demostración",
@@ -152,7 +159,11 @@
     "mensaje": "Mensaje",
     "estado": "Estado",
     "acciones": "Acciones",
-    "soloFarmaceutico": "Solo el personal técnico de farmacia puede marcar alertas como revisadas."
+    "soloFarmaceutico": "Solo el personal técnico de farmacia puede marcar alertas como revisadas.",
+    "filtroEstado": "Filtrar alertas por estado de revisión",
+    "descripcionAccionPlaceholder": "Ej.: se reubicaron los viales y se ajustó el termostato a 5 °C",
+    "descripcionAccionAyuda": "Describe qué se hizo para corregir la desviación. Queda registrado en la trazabilidad.",
+    "etiquetaAccion": "Descripción de la acción correctiva"
   },
   "trazabilidad": {
     "titulo": "Trazabilidad digital",
@@ -174,7 +185,12 @@
     "cadenaComprometida": "Alteración crítica detectada en la cadena",
     "cadenaComprometidaDetalle": "El sistema aisló el bloque afectado. Notifica al administrador y conserva esta evidencia para la auditoría.",
     "aislar": "Aislar registro corrupto",
-    "aislando": "Aislando…"
+    "aislando": "Aislando…",
+    "registroAfectado": "Registro afectado",
+    "hashEsperado": "Sello recalculado",
+    "hashAlmacenado": "Sello almacenado",
+    "posterioresAfectados": "Registros posteriores afectados",
+    "confirmarAislar": "Se marcará este registro como aislado y quedará excluido de la cadena verificable. La acción queda auditada y no se puede deshacer."
   },
   "checklist": {
     "titulo": "Checklist BPA",
@@ -228,7 +244,12 @@
     "errorGenerar": "No se pudo generar el reporte.",
     "descargarPdf": "Descargar PDF",
     "generandoPdf": "Generando PDF…",
-    "notaPdf": "El PDF incluye el resultado de la verificación de integridad de la cadena SHA-256; es el documento que se presenta ante una inspección."
+    "notaPdf": "El PDF incluye el resultado de la verificación de integridad de la cadena SHA-256; es el documento que se presenta ante una inspección.",
+    "errorRangoInvertido": "La fecha inicial es posterior a la final. Corrige el periodo.",
+    "errorPeriodoExcesivo": "El periodo no puede superar {{max}} días. Divide el reporte en tramos.",
+    "errorCuota": "Demasiados reportes seguidos. Espera un minuto antes de volver a generar.",
+    "periodoDias": "Periodo seleccionado: {{dias}} día(s).",
+    "sinReporteDetalle": "Elige un periodo y genera el reporte para ver el resumen y descargarlo en PDF, CSV o JSON."
   },
   "auditoria": {
     "titulo": "Bitácora de auditoría",
@@ -266,7 +287,8 @@
       "despido": "Despido",
       "jubilacion": "Jubilación",
       "otros": "Otros"
-    }
+    },
+    "desactivarA": "Desactivar a {{nombre}}"
   },
   "privacidad": {
     "titulo": "Aviso de privacidad",
@@ -300,7 +322,8 @@
       "mantenimiento": "Mantenimiento",
       "reemplazo": "Reemplazo",
       "fin_de_servicio": "Fin de servicio"
-    }
+    },
+    "darDeBajaA": "Dar de baja el dispositivo {{id}}"
   },
   "firmware": {
     "titulo": "Firmware y actualizaciones OTA",
@@ -340,7 +363,8 @@
     "anterior": "Página anterior",
     "siguiente": "Página siguiente",
     "rangoMostrado": "Mostrando {{desde}}–{{hasta}} de {{total}}",
-    "totalRegistros": "{{total}} registro(s)"
+    "totalRegistros": "{{total}} registro(s)",
+    "verDatosGrafica": "Ver los datos de la gráfica en una tabla"
   },
   "metricasIA": {
     "titulo": "Métricas del modelo de IA",
@@ -368,7 +392,8 @@
     "hashModelo": "Hash del modelo",
     "notaReproducibilidad": "Los hashes del dataset y del artefacto permiten reproducir el entrenamiento y comprobar que el modelo en ejecución es exactamente el evaluado.",
     "noEntrenado": "El modelo Random Forest no está entrenado en este entorno. Ejecute el script de entrenamiento para generar el artefacto y sus métricas.",
-    "errorCarga": "No se pudieron cargar las métricas del modelo."
+    "errorCarga": "No se pudieron cargar las métricas del modelo.",
+    "consecuenciaIncumplimiento": "Por debajo del umbral, la clasificación automática no respalda decisiones de cumplimiento: las excursiones deben confirmarse manualmente."
   },
   "sesion": {
     "porExpirar": "Tu sesión expirará en {{restante}}. Guarda lo que estés haciendo."

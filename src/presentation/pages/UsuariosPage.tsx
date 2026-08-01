@@ -101,7 +101,7 @@ export function UsuariosPage() {
       </PageHeader>
 
       <div className="animate-rise">
-        <Table>
+        <Table titulo={t('usuarios.titulo')} cargando={cargando}>
           <TableHeader>
             <TableRow>
               <TableHead>{t('usuarios.nombre')}</TableHead>
@@ -135,8 +135,11 @@ export function UsuariosPage() {
                     {usuario.is_active ? (
                       <Badge variant="ok">{t('usuarios.activo')}</Badge>
                     ) : (
-                      <Badge variant="critical" title={usuario.motivo_desactivacion ?? undefined}>
+                      <Badge variant="critical">
                         {t('usuarios.inactivo')}
+                        {usuario.motivo_desactivacion && (
+                          <span className="sr-only"> — {usuario.motivo_desactivacion}</span>
+                        )}
                       </Badge>
                     )}
                   </TableCell>
@@ -145,6 +148,7 @@ export function UsuariosPage() {
                       <Button
                         variant="secondary"
                         size="sm"
+                        aria-label={t('usuarios.desactivarA', { nombre: usuario.nombre })}
                         onClick={() => {
                           setUsuarioDesactivar(usuario)
                           setMotivoDesactivacion(MOTIVOS_DESACTIVACION[0])
@@ -166,7 +170,7 @@ export function UsuariosPage() {
 
       {/* ── Diálogo de desactivación (HU-45) ────────────────── */}
       <Dialog open={usuarioDesactivar !== null} onOpenChange={(abierto) => !abierto && setUsuarioDesactivar(null)}>
-        <DialogContent>
+        <DialogContent destructivo>
           <DialogTitle>{t('usuarios.desactivar')}</DialogTitle>
           <DialogDescription>
             {t('usuarios.confirmarDesactivar', { nombre: usuarioDesactivar?.nombre ?? '' })}

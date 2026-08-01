@@ -26,7 +26,20 @@ export function useMonitoreoTermico(): MonitoreoTermico {
     apiClient
       .get<LecturaTermica[]>('/api/lecturas', { params: { limite: MAX_LECTURAS_EN_MEMORIA } })
       .then(({ data }) => {
-        if (activo) setSerie([...data].reverse())
+        if (!activo) return
+        // El historial no puede sobrescribir la serie: la suscripción SSE se
+        // abre en el mismo efecto y no hay garantía de qué responde antes. Si
+        // una lectura en vivo llegaba mientras el GET seguía en vuelo, este
+        // `set` la borraba —y con una excursión térmica en marcha, esa es
+        // justo la lectura que no puede perderse—. Se antepone el historial a
+        // lo ya recibido, descartando por `id` lo que venga repetido.
+        setSerie((previa) => {
+          const yaRecibidas = new Set(previa.map((lectura) => lectura.id))
+          const historial = [...data]
+            .reverse()
+            .filter((lectura) => !yaRecibidas.has(lectura.id))
+          return [...historial, ...previa].slice(-MAX_LECTURAS_EN_MEMORIA)
+        })
       })
       .catch(() => {
         /* el dashboard arranca vacío si el backend aún no tiene lecturas */

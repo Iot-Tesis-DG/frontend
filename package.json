@@ -14,7 +14,9 @@
     "test:coverage": "vitest run --coverage",
     "preview": "vite preview",
     "lint": "eslint src/",
-    "lint:fix": "eslint src/ --fix"
+    "lint:fix": "eslint src/ --fix",
+    "csp:demo": "node scripts/generar-vercel-json.mjs",
+    "csp:prod": "node scripts/generar-vercel-json.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.6",

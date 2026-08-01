@@ -75,7 +75,7 @@ export function DispositivosPage() {
       />
 
       <div className="animate-rise">
-        <Table>
+        <Table titulo={t('dispositivos.titulo')} cargando={cargando}>
           <TableHeader>
             <TableRow>
               <TableHead>{t('dispositivos.id')}</TableHead>
@@ -101,7 +101,9 @@ export function DispositivosPage() {
                   <TableCell className="font-medium">{dispositivo.id}</TableCell>
                   <TableCell>
                     <Badge variant={dispositivo.estado_conectividad === 'online' ? 'ok' : 'neutral'}>
-                      {dispositivo.estado_conectividad}
+                      {dispositivo.estado_conectividad === 'online'
+                        ? t('dashboard.dispositivoOnline')
+                        : t('dashboard.dispositivoOffline')}
                     </Badge>
                   </TableCell>
                   <TableCell className="nums text-[13px] text-muted">
@@ -111,14 +113,22 @@ export function DispositivosPage() {
                     {dispositivo.activo ? (
                       <Badge variant="ok">{t('dispositivos.activo')}</Badge>
                     ) : (
-                      <Badge variant="critical" title={dispositivo.motivo_baja ?? undefined}>
+                      <Badge variant="critical">
                         {t('dispositivos.inactivo')}
+                        {dispositivo.motivo_baja && (
+                          <span className="sr-only"> — {dispositivo.motivo_baja}</span>
+                        )}
                       </Badge>
                     )}
                   </TableCell>
                   <TableCell className="text-right">
                     {dispositivo.activo && (
-                      <Button variant="secondary" size="sm" onClick={() => abrirBaja(dispositivo)}>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        aria-label={t('dispositivos.darDeBajaA', { id: dispositivo.id })}
+                        onClick={() => abrirBaja(dispositivo)}
+                      >
                         <PowerOff />
                         {t('dispositivos.darDeBaja')}
                       </Button>
@@ -133,7 +143,7 @@ export function DispositivosPage() {
       </div>
 
       <Dialog open={dispositivoBaja !== null} onOpenChange={(abierto) => !abierto && setDispositivoBaja(null)}>
-        <DialogContent>
+        <DialogContent destructivo>
           <DialogTitle>{t('dispositivos.darDeBaja')}</DialogTitle>
           <DialogDescription>
             {t('dispositivos.confirmarBaja', { id: dispositivoBaja?.id ?? '' })}

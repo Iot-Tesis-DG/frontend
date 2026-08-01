@@ -57,7 +57,15 @@
   --color-border-strong: #cbbd9a;
   --color-foreground: #2f2f3d;
   --color-muted: #766458;
-  --color-faint: #9c8d81;
+  /* WCAG 1.4.3: #9c8d81 daba 3.13:1 sobre `surface` y 2.92:1 sobre
+     `background`. `faint` no es decorativo — viste `.eyebrow`, las cabeceras de
+     tabla y los ejes de las gráficas —, así que se oscurece hasta cumplir 4.5:1
+     sobre ambas superficies (4.84:1 y 4.52:1) sin salir del neutral cálido. */
+  --color-faint: #7d6d5f;
+  /* Borde de los campos de formulario. `border-strong` (#cbbd9a) daba 1.81:1
+     contra el fondo del campo y el contorno es el único indicio de dónde
+     empieza el input (WCAG 1.4.11 exige 3:1 en componentes de UI). */
+  --color-border-field: #948468;
   --color-primary: #4e5366;
   --color-primary-hover: #383c4a;
   --color-primary-tint: #e9eaee;

@@ -1,8 +1,10 @@
 import { useTranslation } from 'react-i18next'
-import { Brain, CircleAlert } from 'lucide-react'
+import { BrainCircuit, ShieldAlert } from 'lucide-react'
 
 import { useModeloIA, type MetricasPorClase } from '@/application/hooks/useModeloIA'
+import { fechaHora } from '@/lib/formato'
 import { cn } from '@/lib/utils'
+import { EstadoCarga, EstadoError } from '../components/EstadoPagina'
 import { PageHeader } from '../components/PageHeader'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import {
@@ -29,7 +31,7 @@ function esMetricaDeClase(valor: unknown): valor is MetricasPorClase {
 }
 
 export function MetricasIAPage() {
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
   const { datos, cargando, noEntrenado, error } = useModeloIA()
 
   if (cargando) {
@@ -40,7 +42,7 @@ export function MetricasIAPage() {
           titulo={t('metricasIA.titulo')}
           descripcion={t('metricasIA.descripcion')}
         />
-        <p className="animate-fade text-sm text-muted">{t('app.cargando')}</p>
+        <EstadoCarga />
       </div>
     )
   }
@@ -53,14 +55,7 @@ export function MetricasIAPage() {
           titulo={t('metricasIA.titulo')}
           descripcion={t('metricasIA.descripcion')}
         />
-        <Card className="animate-rise">
-          <CardContent className="flex items-start gap-3 p-5">
-            <CircleAlert className="mt-0.5 size-5 shrink-0 text-clay-700" />
-            <p className="text-sm leading-relaxed text-muted">
-              {noEntrenado ? t('metricasIA.noEntrenado') : t('metricasIA.errorCarga')}
-            </p>
-          </CardContent>
-        </Card>
+        <EstadoError mensaje={noEntrenado ? t('metricasIA.noEntrenado') : t('metricasIA.errorCarga')} />
       </div>
     )
   }
@@ -68,9 +63,7 @@ export function MetricasIAPage() {
   const m = datos.metricas
   const clases = ORDEN_CLASES.filter((clase) => esMetricaDeClase(m.classification_report[clase]))
   const cumpleUmbral = m.f1_weighted >= UMBRAL_F1
-  const formatoFecha = new Date(m.trained_at).toLocaleString(
-    i18n.language === 'en' ? 'en-US' : 'es-PE',
-  )
+  const formatoFecha = fechaHora(m.trained_at)
 
   const kpis = [
     {
@@ -117,13 +110,30 @@ export function MetricasIAPage() {
       </div>
 
       {/* ── Veredicto frente al umbral del RNF-04 ───────────── */}
-      <Card className="mb-5 animate-rise">
-        <CardContent className="flex items-start gap-3 p-5">
-          <Brain
-            className={cn('mt-0.5 size-5 shrink-0', cumpleUmbral ? 'text-pine-700' : 'text-clay-700')}
-          />
+      {/* El incumplimiento se distinguía del cumplimiento solo por el tinte
+          del mismo icono (WCAG 1.4.1): ahora cambia la forma, el borde de la
+          tarjeta y el texto. `role="status"` porque es la conclusión de la
+          página, no un adorno: quien navega con lector debe recibirla sin
+          tener que reconstruirla a partir de cuatro cifras sueltas. */}
+      <Card
+        className={cn(
+          'mb-5 animate-rise',
+          cumpleUmbral ? 'border-pine-200 bg-pine-100/40' : 'border-clay-100 bg-clay-100/50',
+        )}
+      >
+        <CardContent role="status" data-testid="veredicto-umbral" className="flex items-start gap-3 p-5">
+          {cumpleUmbral ? (
+            <BrainCircuit className="mt-0.5 size-5 shrink-0 text-pine-700" aria-hidden />
+          ) : (
+            <ShieldAlert className="mt-0.5 size-5 shrink-0 text-clay-700" aria-hidden />
+          )}
           <div>
-            <p className="text-sm font-medium">
+            <p
+              className={cn(
+                'text-sm font-semibold',
+                cumpleUmbral ? 'text-pine-700' : 'text-clay-700',
+              )}
+            >
               {cumpleUmbral ? t('metricasIA.cumpleUmbral') : t('metricasIA.noCumpleUmbral')}
             </p>
             <p className="mt-1 text-[13px] leading-relaxed text-muted">
@@ -132,6 +142,11 @@ export function MetricasIAPage() {
                 umbral: UMBRAL_F1.toFixed(2),
               })}
             </p>
+            {!cumpleUmbral && (
+              <p className="mt-2 text-[13px] font-medium leading-relaxed text-clay-700">
+                {t('metricasIA.consecuenciaIncumplimiento')}
+              </p>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -142,7 +157,7 @@ export function MetricasIAPage() {
           <CardTitle className="text-base">{t('metricasIA.porClase')}</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
+          <Table titulo={t('metricasIA.porClase')}>
             <TableHeader>
               <TableRow>
                 <TableHead>{t('metricasIA.clase')}</TableHead>

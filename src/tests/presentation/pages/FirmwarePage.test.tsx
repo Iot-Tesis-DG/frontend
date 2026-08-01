@@ -46,7 +46,11 @@ describe('FirmwarePage (HU-46)', () => {
     // desplegado es el que se aprobó: es el control anti-manipulación de HU-46.
     montar([release()])
 
-    expect(screen.getByText(new RegExp('e'.repeat(8)))).toBeInTheDocument()
+    // La celda muestra el prefijo truncado y, además, el hash completo como
+    // texto para lector de pantalla: cotejar un binario exige los 64
+    // caracteres, no los 12 primeros.
+    expect(screen.getAllByText(new RegExp('e'.repeat(8))).length).toBeGreaterThan(0)
+    expect(screen.getByText('e'.repeat(64))).toBeInTheDocument()
   })
 
   it('avisa cuando no hay releases preparadas', () => {

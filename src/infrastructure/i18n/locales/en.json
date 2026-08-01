@@ -43,7 +43,11 @@
     "seccionCumplimiento": "Compliance",
     "seccionAdministracion": "Administration",
     "metricasIA": "AI metrics",
-    "guia": "User guide"
+    "guia": "User guide",
+    "saltarAlContenido": "Skip to main content",
+    "principal": "Main navigation",
+    "principalMovil": "Main navigation (mobile menu)",
+    "contenidoPrincipal": "Main content"
   },
   "roles": {
     "administrador": "Technical Director (Pharmacist Chemist)",
@@ -104,7 +108,10 @@
     "resumenMinima": "Minimum",
     "resumenMaxima": "Maximum",
     "resumenPromedio": "Average",
-    "resumenFueraRango": "Out of range"
+    "resumenFueraRango": "Out of range",
+    "graficaEtiqueta": "Line chart: internal and ambient temperature for the last {{n}} readings, with the 2–8 °C storage range marked",
+    "anuncioRiesgo": "{{nivel}}. Internal temperature {{temperatura}} °C.",
+    "anuncioRiesgoSinTemp": "{{nivel}}. No internal temperature reading."
   },
   "demo": {
     "badge": "Demo",
@@ -152,7 +159,11 @@
     "mensaje": "Message",
     "estado": "Status",
     "acciones": "Actions",
-    "soloFarmaceutico": "Only pharmacy technical staff can mark alerts as reviewed."
+    "soloFarmaceutico": "Only pharmacy technical staff can mark alerts as reviewed.",
+    "filtroEstado": "Filter alerts by review status",
+    "descripcionAccionPlaceholder": "E.g. vials were relocated and the thermostat set to 5 °C",
+    "descripcionAccionAyuda": "Describe what was done to correct the deviation. It is recorded in the traceability log.",
+    "etiquetaAccion": "Corrective action description"
   },
   "trazabilidad": {
     "titulo": "Digital traceability",
@@ -174,7 +185,12 @@
     "cadenaComprometida": "Critical tampering detected in the chain",
     "cadenaComprometidaDetalle": "The system quarantined the affected block. Notify the administrator and preserve this evidence for the audit.",
     "aislar": "Quarantine corrupted record",
-    "aislando": "Quarantining…"
+    "aislando": "Quarantining…",
+    "registroAfectado": "Affected record",
+    "hashEsperado": "Recomputed seal",
+    "hashAlmacenado": "Stored seal",
+    "posterioresAfectados": "Subsequent records affected",
+    "confirmarAislar": "This record will be marked as isolated and excluded from the verifiable chain. The action is audited and cannot be undone."
   },
   "checklist": {
     "titulo": "GSP Checklist",
@@ -228,7 +244,12 @@
     "errorGenerar": "The report could not be generated.",
     "descargarPdf": "Download PDF",
     "generandoPdf": "Generating PDF…",
-    "notaPdf": "The PDF embeds the SHA-256 chain integrity verdict; it is the document presented during an inspection."
+    "notaPdf": "The PDF embeds the SHA-256 chain integrity verdict; it is the document presented during an inspection.",
+    "errorRangoInvertido": "The start date is after the end date. Fix the period.",
+    "errorPeriodoExcesivo": "The period cannot exceed {{max}} days. Split the report into shorter ranges.",
+    "errorCuota": "Too many reports in a row. Wait a minute before generating again.",
+    "periodoDias": "Selected period: {{dias}} day(s).",
+    "sinReporteDetalle": "Pick a period and generate the report to see the summary and download it as PDF, CSV or JSON."
   },
   "auditoria": {
     "titulo": "Audit log",
@@ -266,7 +287,8 @@
       "despido": "Termination",
       "jubilacion": "Retirement",
       "otros": "Other"
-    }
+    },
+    "desactivarA": "Deactivate {{nombre}}"
   },
   "privacidad": {
     "titulo": "Privacy notice",
@@ -300,7 +322,8 @@
       "mantenimiento": "Maintenance",
       "reemplazo": "Replacement",
       "fin_de_servicio": "End of service"
-    }
+    },
+    "darDeBajaA": "Decommission device {{id}}"
   },
   "firmware": {
     "titulo": "Firmware & OTA updates",
@@ -340,7 +363,8 @@
     "anterior": "Previous page",
     "siguiente": "Next page",
     "rangoMostrado": "Showing {{desde}}–{{hasta}} of {{total}}",
-    "totalRegistros": "{{total}} record(s)"
+    "totalRegistros": "{{total}} record(s)",
+    "verDatosGrafica": "View the chart data as a table"
   },
   "metricasIA": {
     "titulo": "AI model metrics",
@@ -368,7 +392,8 @@
     "hashModelo": "Model hash",
     "notaReproducibilidad": "The dataset and artifact hashes allow the training run to be reproduced and confirm that the deployed model is exactly the one evaluated.",
     "noEntrenado": "The Random Forest model is not trained in this environment. Run the training script to generate the artifact and its metrics.",
-    "errorCarga": "Model metrics could not be loaded."
+    "errorCarga": "Model metrics could not be loaded.",
+    "consecuenciaIncumplimiento": "Below the threshold, automatic classification does not support compliance decisions: excursions must be confirmed manually."
   },
   "sesion": {
     "porExpirar": "Your session expires in {{restante}}. Save your work."

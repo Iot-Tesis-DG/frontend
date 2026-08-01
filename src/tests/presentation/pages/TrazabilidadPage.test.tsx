@@ -88,7 +88,9 @@ describe('TrazabilidadPage (RF-14, RF-15, HU-26, HU-47)', () => {
     })
 
     expect(screen.getByText(/alteración detectada/i)).toBeInTheDocument()
-    expect(screen.getByText(/17/)).toBeInTheDocument()
+    // `getAllByText`: la posición aparece en el resumen y el identificador
+    // `r-17` en el nuevo bloque de detalle del registro afectado.
+    expect(screen.getAllByText(/17/).length).toBeGreaterThan(0)
   })
 
   it('avisa cuando la cadena quedó comprometida (HU-47)', () => {
