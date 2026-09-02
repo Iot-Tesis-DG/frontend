@@ -2,9 +2,10 @@ import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { BellOff, CheckCheck, ClipboardPen } from 'lucide-react'
 
-import { useAlertas, type FiltroRevision } from '@/application/hooks/useAlertas'
+import { useAlertas, type FiltroEstado } from '@/application/hooks/useAlertas'
 import { useAuthStore } from '@/application/stores/authStore'
 import { tienePermiso } from '@/domain/value-objects/Rol'
+import type { EstadoAlerta } from '@/domain/value-objects/EstadoAlerta'
 import type { AlertaTermica } from '@/domain/entities/AlertaTermica'
 import { fechaHora } from '@/lib/formato'
 import { cn } from '@/lib/utils'
@@ -31,12 +32,19 @@ import {
   TableRow,
 } from '../components/ui/table'
 
-const FILTROS: FiltroRevision[] = ['pendientes', 'revisadas', 'todas']
+// HU-23: los tabs de filtro siguen la máquina de estados, no un booleano.
+const FILTROS: FiltroEstado[] = ['pendiente', 'reconocida', 'atendida', 'todas']
+
+const VARIANTE_POR_ESTADO: Record<EstadoAlerta, 'outline' | 'warn' | 'ok'> = {
+  pendiente: 'outline',
+  reconocida: 'warn',
+  atendida: 'ok',
+}
 
 export function AlertasPage() {
   const { t } = useTranslation()
   const usuario = useAuthStore((s) => s.usuario)
-  const { alertas, cargando, filtro, setFiltro, marcarRevisada, registrarAccionCorrectiva } =
+  const { alertas, cargando, filtro, setFiltro, reconocerAlerta, registrarAccionCorrectiva } =
     useAlertas()
   const [pagina, setPagina] = useState(1)
   // Solo se pinta la página visible: estas listas crecen sin techo.
@@ -46,23 +54,48 @@ export function AlertasPage() {
   const [descripcionAccion, setDescripcionAccion] = useState('')
   const [guardandoAccion, setGuardandoAccion] = useState(false)
   const [mensajeExito, setMensajeExito] = useState(false)
+  // HU-27 Escenario 2: la alerta pudo cambiar de estado entre que se cargó
+  // la lista y este click (otro usuario la atendió primero).
+  const [conflictoAccion, setConflictoAccion] = useState(false)
+  const [conflictoReconocer, setConflictoReconocer] = useState<string | null>(null)
 
-  const puedeRevisar = usuario !== null && tienePermiso(usuario.rol, ['farmaceutico'])
+  // HU-23/HU-41: reconocer (PENDIENTE -> RECONOCIDA) es exclusivo del
+  // farmacéutico, igual que ya exige `require_roles(Rol.FARMACEUTICO)` en el
+  // backend. Registrar una acción correctiva la permiten farmacéutico y
+  // técnico. AUDITOR no aparece en ninguna de las dos listas: es de solo
+  // lectura, así que ambos botones quedan ocultos para ese rol.
+  const puedeReconocer = usuario !== null && tienePermiso(usuario.rol, ['farmaceutico'])
+  const puedeRegistrarAccion =
+    usuario !== null && tienePermiso(usuario.rol, ['farmaceutico', 'tecnico'])
 
   const guardarAccion = async () => {
     if (!alertaSeleccionada || descripcionAccion.trim().length === 0) return
     setGuardandoAccion(true)
+    setConflictoAccion(false)
     try {
-      await registrarAccionCorrectiva(alertaSeleccionada.id, descripcionAccion.trim())
-      setMensajeExito(true)
-      setTimeout(() => {
-        setAlertaSeleccionada(null)
-        setDescripcionAccion('')
-        setMensajeExito(false)
-      }, 1200)
+      const resultado = await registrarAccionCorrectiva(alertaSeleccionada.id, descripcionAccion.trim())
+      if (resultado === 'ok') {
+        setMensajeExito(true)
+        setTimeout(() => {
+          setAlertaSeleccionada(null)
+          setDescripcionAccion('')
+          setMensajeExito(false)
+        }, 1200)
+      } else if (resultado === 'conflicto') {
+        // HU-27 Escenario 2: otro usuario ya atendió esta alerta. La lista
+        // ya se refrescó (dentro del hook); aquí solo se informa por qué
+        // este envío en particular no se aplicó.
+        setConflictoAccion(true)
+      }
     } finally {
       setGuardandoAccion(false)
     }
+  }
+
+  const reconocer = async (alertaId: string) => {
+    setConflictoReconocer(null)
+    const resultado = await reconocerAlerta(alertaId)
+    if (resultado === 'conflicto') setConflictoReconocer(alertaId)
   }
 
   return (
@@ -86,7 +119,7 @@ export function AlertasPage() {
                   : 'text-muted hover:text-foreground',
               )}
             >
-              {t(`alertas.${opcion}`)}
+              {t(`alertas.filtro.${opcion}`)}
             </button>
           ))}
         </div>
@@ -126,34 +159,41 @@ export function AlertasPage() {
                   </TableCell>
                   <TableCell className="max-w-72 text-[13px] text-muted">{alerta.mensaje}</TableCell>
                   <TableCell>
-                    {alerta.revisada ? (
-                      <Badge variant="ok">{t('alertas.revisada')}</Badge>
-                    ) : (
-                      <Badge variant="outline">{t('alertas.pendientes')}</Badge>
-                    )}
+                    <Badge variant={VARIANTE_POR_ESTADO[alerta.estado]}>
+                      {t(`alertas.estadoAlerta.${alerta.estado}`)}
+                    </Badge>
                   </TableCell>
                   <TableCell className="text-right">
+                    <div className="inline-flex flex-col items-end gap-1">
                     <div className="inline-flex gap-1.5">
-                      {!alerta.revisada && puedeRevisar && (
+                      {alerta.estado === 'pendiente' && puedeReconocer && (
                         <Button
                           size="sm"
                           variant="secondary"
-                          onClick={() => void marcarRevisada(alerta.id)}
-                          title={t('alertas.revisar')}
+                          onClick={() => void reconocer(alerta.id)}
+                          title={t('alertas.reconocer')}
                         >
                           <CheckCheck />
-                          {t('alertas.revisar')}
+                          {t('alertas.reconocer')}
                         </Button>
                       )}
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setAlertaSeleccionada(alerta)}
-                        title={t('alertas.registrarAccion')}
-                      >
-                        <ClipboardPen />
-                        {t('alertas.accionCorrectiva')}
-                      </Button>
+                      {alerta.estado !== 'atendida' && puedeRegistrarAccion && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setAlertaSeleccionada(alerta)}
+                          title={t('alertas.registrarAccion')}
+                        >
+                          <ClipboardPen />
+                          {t('alertas.accionCorrectiva')}
+                        </Button>
+                      )}
+                    </div>
+                    {conflictoReconocer === alerta.id && (
+                      <p role="alert" className="text-xs text-clay-700">
+                        {t('alertas.conflictoEstado')}
+                      </p>
+                    )}
                     </div>
                   </TableCell>
                 </TableRow>
@@ -172,6 +212,7 @@ export function AlertasPage() {
             setAlertaSeleccionada(null)
             setDescripcionAccion('')
             setMensajeExito(false)
+            setConflictoAccion(false)
           }
         }}
       >
@@ -199,6 +240,14 @@ export function AlertasPage() {
                 className="rounded-(--radius-field) bg-pine-100 px-3 py-2 text-[13px] text-pine-700"
               >
                 {t('alertas.accionRegistrada')}
+              </p>
+            )}
+            {conflictoAccion && (
+              <p
+                role="alert"
+                className="rounded-(--radius-field) bg-clay-100 px-3 py-2 text-[13px] text-clay-700"
+              >
+                {t('alertas.conflictoEstado')}
               </p>
             )}
             <div className="flex justify-end gap-2">
