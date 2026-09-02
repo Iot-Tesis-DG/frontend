@@ -406,30 +406,34 @@ describe('Reportes BPA — RF-13 y manejo del error de descarga', () => {
 function alerta(over: Partial<AlertaTermica> = {}): AlertaTermica {
   return {
     id: 'a-1',
-    lectura_id: 'l-1',
+    reading_id: 'l-1',
     device_id: 'FARM-01-CDL',
     nivel_riesgo: 'excursion_critica',
     mensaje: 'Temperatura fuera del rango 2-8 °C',
     revisada: false,
+    revisada_por: null,
     created_at: '2026-07-25T12:00:00Z',
+    estado: 'pendiente',
+    reconocida_en: null,
+    atendida_en: null,
     ...over,
-  } as AlertaTermica
+  }
 }
 
 function montarAlertas(over: Record<string, unknown> = {}) {
-  const registrarAccionCorrectiva = vi.fn().mockResolvedValue(undefined)
-  const marcarRevisada = vi.fn().mockResolvedValue(undefined)
+  const registrarAccionCorrectiva = vi.fn().mockResolvedValue('ok')
+  const reconocerAlerta = vi.fn().mockResolvedValue('ok')
   useAlertas.mockReturnValue({
     alertas: [alerta()],
     cargando: false,
-    filtro: 'pendientes',
+    filtro: 'pendiente',
     setFiltro: vi.fn(),
-    marcarRevisada,
+    reconocerAlerta,
     registrarAccionCorrectiva,
     ...over,
   })
   render(<AlertasPage />)
-  return { registrarAccionCorrectiva, marcarRevisada }
+  return { registrarAccionCorrectiva, reconocerAlerta }
 }
 
 describe('Alertas — ciclo completo de acción correctiva (RF-09, RF-10)', () => {
@@ -460,6 +464,18 @@ describe('Alertas — ciclo completo de acción correctiva (RF-09, RF-10)', () =
     await usuario.click(within(dialogo).getByRole('button', { name: /guardar/i }))
 
     expect(registrarAccionCorrectiva).toHaveBeenCalledWith('a-1', 'Se reubicaron los viales')
+  })
+
+  it('avisa cuando otro usuario ya atendió la alerta primero (HU-27 Escenario 2)', async () => {
+    const usuario = userEvent.setup()
+    montarAlertas({ registrarAccionCorrectiva: vi.fn().mockResolvedValue('conflicto') })
+
+    await usuario.click(screen.getByRole('button', { name: /acción correctiva/i }))
+    const dialogo = await screen.findByRole('dialog')
+    await usuario.type(within(dialogo).getByLabelText(/descripción/i), 'Termostato ajustado')
+    await usuario.click(within(dialogo).getByRole('button', { name: /guardar/i }))
+
+    expect(await within(dialogo).findByRole('alert')).toHaveTextContent(/actualizada por otra persona/i)
   })
 
   it('no deja guardar una acción vacía', async () => {
@@ -512,7 +528,7 @@ describe('Alertas — ciclo completo de acción correctiva (RF-09, RF-10)', () =
     expect(within(dialogo).getByLabelText(/descripción/i)).toBeInTheDocument()
   })
 
-  it('un técnico no puede marcar la alerta como revisada', () => {
+  it('un técnico no puede reconocer la alerta (RBAC en la vista)', () => {
     useAuthStore.setState({
       usuario: {
         id: 'u-3',
@@ -525,15 +541,15 @@ describe('Alertas — ciclo completo de acción correctiva (RF-09, RF-10)', () =
     })
     montarAlertas()
 
-    expect(screen.queryByRole('button', { name: /marcar revisada/i })).toBeNull()
+    expect(screen.queryByRole('button', { name: /reconocer/i })).toBeNull()
   })
 
-  it('el farmacéutico marca la alerta como revisada', async () => {
+  it('el farmacéutico reconoce la alerta pendiente', async () => {
     const usuario = userEvent.setup()
-    const { marcarRevisada } = montarAlertas()
+    const { reconocerAlerta } = montarAlertas()
 
-    await usuario.click(screen.getByRole('button', { name: /marcar revisada/i }))
+    await usuario.click(screen.getByRole('button', { name: /reconocer/i }))
 
-    expect(marcarRevisada).toHaveBeenCalledWith('a-1')
+    expect(reconocerAlerta).toHaveBeenCalledWith('a-1')
   })
 })

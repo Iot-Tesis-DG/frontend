@@ -18,8 +18,11 @@ function lectura(over: Partial<LecturaTermica> = {}): LecturaTermica {
     humedad_ambiental: 62,
     temperatura_interna: 4.5,
     apertura_refrigerador: false,
+    duracion_apertura_segundos: 0,
     estado_conectividad: 'online',
     nivel_riesgo: 'normal',
+    excursion_confirmada: false,
+    riesgo_efectivo: 'normal',
     confianza_ia: 0.98,
     modelo_version: '3.0.0',
     origen_clasificacion: 'random_forest',
@@ -70,5 +73,23 @@ describe('HistorialPage (RF-12, HU-36)', () => {
   it('avisa cuando no hay lecturas para el filtro', () => {
     montar([])
     expect(screen.getByText(/no hay lecturas|sin lecturas|sin resultados/i)).toBeInTheDocument()
+  })
+})
+
+describe('HistorialPage — HU-34/HU-35: riesgo efectivo y puerta MC-38 opcional', () => {
+  beforeEach(() => useHistorial.mockReset())
+
+  it('muestra el riesgo efectivo de la lectura, no la clase cruda de la IA', () => {
+    montar([lectura({ nivel_riesgo: 'riesgo_preventivo', riesgo_efectivo: 'excursion_critica' })])
+
+    // La celda de riesgo debe reflejar `riesgo_efectivo`, no `nivel_riesgo`.
+    expect(screen.getByRole('cell', { name: /excursión crítica/i })).toBeInTheDocument()
+  })
+
+  it('marca la puerta con un icono distinto cuando no hay MC-38 instalado, no como cerrada', () => {
+    montar([lectura({ apertura_refrigerador: null })])
+
+    expect(screen.getByRole('img', { name: /sin sensor mc-38/i })).toBeInTheDocument()
+    expect(screen.queryByRole('img', { name: /^cerrada$/i })).not.toBeInTheDocument()
   })
 })

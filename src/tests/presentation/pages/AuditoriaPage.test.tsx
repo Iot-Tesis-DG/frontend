@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { RegistroAuditoria } from '@/domain/entities/Usuario'
@@ -44,5 +45,17 @@ describe('AuditoriaPage (HU-42, RF-16)', () => {
     render(<AuditoriaPage />)
 
     expect(screen.getByText(/no hay acciones críticas/i)).toBeInTheDocument()
+  })
+
+  it('HU-50 criterio 1: permite filtrar por acción, usuario y periodo', async () => {
+    const usuario = userEvent.setup()
+    const consultar = vi.fn()
+    useAuditoria.mockReturnValue({ registros: [registro()], cargando: false, consultar })
+    render(<AuditoriaPage />)
+
+    await usuario.type(screen.getByLabelText(/acción/i), 'LOGIN_FALLIDO')
+    await usuario.click(screen.getByRole('button', { name: /aplicar|consultar|filtrar|buscar/i }))
+
+    expect(consultar).toHaveBeenCalledWith(expect.objectContaining({ accion: 'LOGIN_FALLIDO' }))
   })
 })
