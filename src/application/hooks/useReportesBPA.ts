@@ -151,8 +151,14 @@ export function useReportesBPA() {
         l.temperatura_interna?.toFixed(1) ?? '',
         l.temperatura_ambiental?.toFixed(1) ?? '',
         l.humedad_ambiental?.toFixed(0) ?? '',
-        l.apertura_refrigerador ? t('dashboard.puertaAbierta') : t('dashboard.puertaCerrada'),
-        l.nivel_riesgo ? t(`riesgo.${l.nivel_riesgo}`) : '',
+        l.apertura_refrigerador === null
+          ? t('dashboard.puertaSinSensor')
+          : l.apertura_refrigerador
+            ? t('dashboard.puertaAbierta')
+            : t('dashboard.puertaCerrada'),
+        // HU-34: un reporte de cumplimiento no puede presentar la clase
+        // cruda de la IA como si fuera el veredicto — es `riesgo_efectivo`.
+        l.riesgo_efectivo ? t(`riesgo.${l.riesgo_efectivo}`) : '',
       ]
         .map(campoCsv)
         .join(';'),
