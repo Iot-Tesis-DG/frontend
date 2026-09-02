@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { UserPlus, UserX, Users } from 'lucide-react'
+import { ShieldCheck, UserPlus, UserX, Users } from 'lucide-react'
 
 import { useUsuarios } from '@/application/hooks/useUsuarios'
 import type { MotivoDesactivacion, Usuario } from '@/domain/entities/Usuario'
@@ -27,13 +27,14 @@ const VARIANTE_POR_ROL = {
   administrador: 'critical',
   farmaceutico: 'ok',
   tecnico: 'neutral',
+  auditor: 'warn',
 } as const
 
 const FORM_INICIAL = { nombre: '', email: '', password: '', rol: 'tecnico' as Rol }
 
 export function UsuariosPage() {
   const { t } = useTranslation()
-  const { usuarios, cargando, crear, desactivar } = useUsuarios()
+  const { usuarios, cargando, crear, desactivar, cambiarRol } = useUsuarios()
   const [pagina, setPagina] = useState(1)
   // La lista completa puede tener miles de filas; solo se pinta la página
   // visible. Al cambiar la lista (filtro nuevo) se vuelve a la primera.
@@ -53,6 +54,29 @@ export function UsuariosPage() {
   const [mensajeDesactivacion, setMensajeDesactivacion] = useState<{ tipo: 'ok' | 'error'; texto: string } | null>(
     null,
   )
+
+  // HU-41 criterio 1: cambiar el rol de un usuario YA existente, no solo
+  // fijarlo al crearlo.
+  const [usuarioCambiarRol, setUsuarioCambiarRol] = useState<Usuario | null>(null)
+  const [rolNuevo, setRolNuevo] = useState<Rol>('tecnico')
+  const [cambiandoRol, setCambiandoRol] = useState(false)
+  const [mensajeCambioRol, setMensajeCambioRol] = useState<{ tipo: 'ok' | 'error'; texto: string } | null>(null)
+
+  const enviarCambioRol = async (event: React.FormEvent) => {
+    event.preventDefault()
+    if (!usuarioCambiarRol) return
+    setCambiandoRol(true)
+    setMensajeCambioRol(null)
+    const resultado = await cambiarRol(usuarioCambiarRol.id, rolNuevo)
+    setCambiandoRol(false)
+
+    if (resultado === 'ok') {
+      setMensajeCambioRol({ tipo: 'ok', texto: t('usuarios.rolActualizadoOk') })
+      setTimeout(() => setUsuarioCambiarRol(null), 1000)
+    } else {
+      setMensajeCambioRol({ tipo: 'error', texto: t('comunes.error') })
+    }
+  }
 
   const enviarDesactivacion = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -145,19 +169,34 @@ export function UsuariosPage() {
                   </TableCell>
                   <TableCell className="text-right">
                     {usuario.is_active && (
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        aria-label={t('usuarios.desactivarA', { nombre: usuario.nombre })}
-                        onClick={() => {
-                          setUsuarioDesactivar(usuario)
-                          setMotivoDesactivacion(MOTIVOS_DESACTIVACION[0])
-                          setMensajeDesactivacion(null)
-                        }}
-                      >
-                        <UserX />
-                        {t('usuarios.desactivar')}
-                      </Button>
+                      <div className="inline-flex gap-1.5">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          aria-label={t('usuarios.cambiarRolA', { nombre: usuario.nombre })}
+                          onClick={() => {
+                            setUsuarioCambiarRol(usuario)
+                            setRolNuevo(usuario.rol)
+                            setMensajeCambioRol(null)
+                          }}
+                        >
+                          <ShieldCheck />
+                          {t('usuarios.cambiarRol')}
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          aria-label={t('usuarios.desactivarA', { nombre: usuario.nombre })}
+                          onClick={() => {
+                            setUsuarioDesactivar(usuario)
+                            setMotivoDesactivacion(MOTIVOS_DESACTIVACION[0])
+                            setMensajeDesactivacion(null)
+                          }}
+                        >
+                          <UserX />
+                          {t('usuarios.desactivar')}
+                        </Button>
+                      </div>
                     )}
                   </TableCell>
                 </TableRow>
@@ -167,6 +206,54 @@ export function UsuariosPage() {
         </Table>
         <Paginacion total={usuarios.length} pagina={pagina} onCambiar={setPagina} />
       </div>
+
+      {/* ── Diálogo de cambio de rol (HU-41) ────────────────── */}
+      <Dialog open={usuarioCambiarRol !== null} onOpenChange={(abierto) => !abierto && setUsuarioCambiarRol(null)}>
+        <DialogContent>
+          <DialogTitle>{t('usuarios.cambiarRol')}</DialogTitle>
+          <DialogDescription>
+            {t('usuarios.confirmarCambiarRol', { nombre: usuarioCambiarRol?.nombre ?? '' })}
+          </DialogDescription>
+          <form onSubmit={enviarCambioRol} className="mt-4 space-y-3">
+            <div>
+              <Label htmlFor="ur-rol">{t('usuarios.nuevoRol')}</Label>
+              <NativeSelect
+                id="ur-rol"
+                value={rolNuevo}
+                onChange={(e) => setRolNuevo(e.target.value as Rol)}
+              >
+                {ROLES.map((rol) => (
+                  <option key={rol} value={rol}>
+                    {t(`roles.${rol}`)}
+                  </option>
+                ))}
+              </NativeSelect>
+            </div>
+
+            {mensajeCambioRol && (
+              <p
+                role={mensajeCambioRol.tipo === 'error' ? 'alert' : 'status'}
+                className={
+                  mensajeCambioRol.tipo === 'ok'
+                    ? 'rounded-(--radius-field) bg-pine-100 px-3 py-2 text-[13px] text-pine-700'
+                    : 'rounded-(--radius-field) bg-clay-100 px-3 py-2 text-[13px] text-clay-700'
+                }
+              >
+                {mensajeCambioRol.texto}
+              </p>
+            )}
+
+            <div className="flex justify-end gap-2 pt-1">
+              <Button variant="ghost" onClick={() => setUsuarioCambiarRol(null)} disabled={cambiandoRol}>
+                {t('usuarios.cancelar')}
+              </Button>
+              <Button type="submit" disabled={cambiandoRol}>
+                {cambiandoRol ? t('usuarios.cambiando') : t('usuarios.cambiarRol')}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       {/* ── Diálogo de desactivación (HU-45) ────────────────── */}
       <Dialog open={usuarioDesactivar !== null} onOpenChange={(abierto) => !abierto && setUsuarioDesactivar(null)}>

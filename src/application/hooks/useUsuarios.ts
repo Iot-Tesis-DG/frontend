@@ -51,5 +51,22 @@ export function useUsuarios() {
     [consultar],
   )
 
-  return { usuarios, cargando, crear, desactivar }
+  // HU-41 criterio 1: "crea un usuario O asigna/modifica un rol" — un
+  // administrador puede cambiar el rol de un usuario YA existente, no solo
+  // fijarlo al crearlo.
+  const cambiarRol = useCallback(
+    async (usuarioId: string, rol: Rol): Promise<'ok' | 'conflicto' | 'error'> => {
+      try {
+        await apiClient.patch(`/api/usuarios/${usuarioId}/rol`, { rol })
+        await consultar()
+        return 'ok'
+      } catch (error) {
+        if (axios.isAxiosError(error) && error.response?.status === 409) return 'conflicto'
+        return 'error'
+      }
+    },
+    [consultar],
+  )
+
+  return { usuarios, cargando, crear, desactivar, cambiarRol }
 }

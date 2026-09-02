@@ -43,6 +43,7 @@ const CUENTAS_DEMO: Array<{ rol: Rol; email: string }> = [
   { rol: 'farmaceutico', email: 'farmaceutico@demo.pe' },
   { rol: 'tecnico', email: 'tecnico@demo.pe' },
   { rol: 'administrador', email: 'admin@demo.pe' },
+  { rol: 'auditor', email: 'auditor@demo.pe' },
 ]
 
 function FacebookIcon() {
