@@ -51,6 +51,9 @@ export const USUARIOS_DEMO: Usuario[] = [
   { id: 'u-02', nombre: 'Diego Soto Quispe', email: 'admin@demo.pe', rol: 'administrador', is_active: true, motivo_desactivacion: null, desactivado_en: null },
   { id: 'u-03', nombre: 'María Ccahuana Ríos', email: 'tecnico@demo.pe', rol: 'tecnico', is_active: true, motivo_desactivacion: null, desactivado_en: null },
   { id: 'u-04', nombre: 'Jorge Villanueva Paz', email: 'jorge.villanueva@demo.pe', rol: 'tecnico', is_active: true, motivo_desactivacion: null, desactivado_en: null },
+  // HU-41: quinta cuenta demo de solo lectura, para poder probar la UI
+  // condicionada al rol AUDITOR sin backend real.
+  { id: 'u-05', nombre: 'Renzo Aguilar Prado', email: 'auditor@demo.pe', rol: 'auditor', is_active: true, motivo_desactivacion: null, desactivado_en: null },
 ]
 
 const DIA_MS = 24 * 60 * 60 * 1000
@@ -146,6 +149,12 @@ function generarEstadoInicial(): EstadoDemo {
     const ambiental = 21.5 + 3.6 * Math.sin(faseDia - Math.PI / 2) + (rng() - 0.5) * 1.2
     const humedad = 61 + 7 * Math.sin(faseDia + Math.PI / 3) + (rng() - 0.5) * 4
 
+    // HU-34: en el simulador la regla directa (2–8 °C) y `clasificar()` usan
+    // exactamente el mismo umbral, así que `riesgo_efectivo` coincide con
+    // `nivel_riesgo` aquí — a diferencia del backend real, este demo no
+    // simula un falso positivo/negativo del Random Forest.
+    const excursionConfirmada = interna < 2 || interna > 8
+
     lecturas.push({
       id: `lec-${String(i).padStart(4, '0')}`,
       device_id: DISPOSITIVO_DEMO,
@@ -154,8 +163,11 @@ function generarEstadoInicial(): EstadoDemo {
       temperatura_ambiental: redondear(ambiental, 1),
       humedad_ambiental: redondear(humedad, 0),
       apertura_refrigerador: puerta,
+      duracion_apertura_segundos: puerta ? Math.round(30 + rng() * 400) : 0,
       estado_conectividad: 'online',
       nivel_riesgo: clasificar(interna),
+      excursion_confirmada: excursionConfirmada,
+      riesgo_efectivo: clasificar(interna),
       confianza_ia: 0.9,
       modelo_version: 'demo-3.0.0',
       origen_clasificacion: 'random_forest',
@@ -188,22 +200,30 @@ function generarEstadoInicial(): EstadoDemo {
         revisada: false,
         revisada_por: null,
         created_at: lectura.timestamp,
+        estado: 'pendiente',
+        reconocida_en: null,
+        atendida_en: null,
       })
     }
     nivelPrevio = nivel
   }
-  // Las alertas antiguas ya fueron atendidas; quedan pendientes las recientes
-  // (incluida la excursión crítica de ayer, para que el demo tenga qué mostrar).
+  // Las alertas antiguas ya fueron atendidas (HU-23: PENDIENTE -> RECONOCIDA
+  // -> ATENDIDA); quedan pendientes las recientes (incluida la excursión
+  // crítica de ayer, para que el demo tenga qué mostrar).
   const pendientesDesde = ahora - 30 * 60 * 60 * 1000
   for (const alerta of alertas) {
     if (new Date(alerta.created_at ?? 0).getTime() < pendientesDesde) {
       alerta.revisada = true
       alerta.revisada_por = 'u-01'
+      alerta.estado = 'atendida'
+      const creada = new Date(alerta.created_at ?? 0).getTime()
+      alerta.reconocida_en = new Date(creada + 5 * 60 * 1000).toISOString()
+      alerta.atendida_en = new Date(creada + 25 * 60 * 1000).toISOString()
     }
   }
 
   const acciones: AccionCorrectiva[] = alertas
-    .filter((a) => a.revisada && a.nivel_riesgo === 'excursion_critica')
+    .filter((a) => a.estado === 'atendida' && a.nivel_riesgo === 'excursion_critica')
     .map((a, i) => ({
       id: `ac-${String(i + 1).padStart(3, '0')}`,
       alert_id: a.id,
@@ -346,8 +366,11 @@ export function generarLecturaEnVivo(): LecturaTermica {
     temperatura_ambiental: redondear(21.8 + (rngVivo() - 0.5) * 1.4, 1),
     humedad_ambiental: redondear(62 + (rngVivo() - 0.5) * 5, 0),
     apertura_refrigerador: puerta,
+    duracion_apertura_segundos: puerta ? Math.round(30 + rngVivo() * 400) : 0,
     estado_conectividad: 'online',
     nivel_riesgo: clasificar(interna),
+    excursion_confirmada: interna < 2 || interna > 8,
+    riesgo_efectivo: clasificar(interna),
     confianza_ia: 0.9,
     modelo_version: 'demo-3.0.0',
     origen_clasificacion: 'random_forest',

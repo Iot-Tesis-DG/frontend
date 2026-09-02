@@ -121,6 +121,9 @@ function lecturasFiltradas(params: Record<string, string>): LecturaTermica[] {
 
 function alertasFiltradas(params: Record<string, string>): AlertaTermica[] {
   let resultado = [...estadoDemo.alertas].reverse()
+  // HU-23: `estado` es el filtro real; `revisada` se conserva solo por si
+  // algún consumidor viejo del demo todavía lo manda.
+  if (params.estado) resultado = resultado.filter((a) => a.estado === params.estado)
   if (params.revisada === 'true') resultado = resultado.filter((a) => a.revisada)
   if (params.revisada === 'false') resultado = resultado.filter((a) => !a.revisada)
   return resultado.slice(0, Number(params.limite ?? 200))
@@ -151,17 +154,34 @@ export const demoAdapter: AxiosAdapter = async (config) => {
     return responder(config, alertasFiltradas(params))
   }
 
+  // HU-23 Escenario 1: PENDIENTE -> RECONOCIDA. Reconocer dos veces es un
+  // 409, igual que en el backend (`AlertaTermica.reconocer()`).
   const revisar = /^\/api\/alertas\/([^/]+)\/revisar$/.exec(url)
   if (metodo === 'patch' && revisar) {
     const alerta = estadoDemo.alertas.find((a) => a.id === revisar[1])
     if (!alerta) fallar(config, 404, 'Alerta no encontrada')
+    if (alerta.estado !== 'pendiente') {
+      fallar(config, 409, `La alerta ya fue reconocida (estado actual: ${alerta.estado})`)
+    }
+    alerta.estado = 'reconocida'
+    alerta.reconocida_en = new Date().toISOString()
     alerta.revisada = true
     alerta.revisada_por = 'u-01'
     return responder(config, alerta)
   }
 
+  // HU-23 Escenario 2: registrar la acción marca ATENDIDA (desde PENDIENTE o
+  // RECONOCIDA — el backend no exige el paso intermedio). Ya atendida es 409.
   const accion = /^\/api\/alertas\/([^/]+)\/acciones-correctivas$/.exec(url)
   if (metodo === 'post' && accion) {
+    const alerta = estadoDemo.alertas.find((a) => a.id === accion[1])
+    if (!alerta) fallar(config, 404, 'Alerta no encontrada')
+    if (alerta.estado === 'atendida') {
+      fallar(config, 409, 'La alerta ya fue atendida por otra acción correctiva')
+    }
+    alerta.estado = 'atendida'
+    alerta.atendida_en = new Date().toISOString()
+
     const nueva = {
       id: `ac-vivo-${Date.now()}`,
       alert_id: accion[1],
