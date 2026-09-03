@@ -2,12 +2,12 @@ import { useMemo } from 'react'
 import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import type { EChartsCoreOption } from 'echarts/core'
-import { DoorClosed, DoorOpen, Droplets, RadioTower, Thermometer, Wind } from 'lucide-react'
+import { AlertTriangle, DoorClosed, DoorOpen, Droplets, RadioTower, ShieldQuestion, Thermometer, Wind } from 'lucide-react'
 
 import { useMonitoreoTermico } from '@/application/hooks/useMonitoreoTermico'
 import type { LecturaTermica } from '@/domain/entities/LecturaTermica'
 import { EChartWrapper } from '@/infrastructure/charts/EChartWrapper'
-import { hora as formatearHora } from '@/lib/formato'
+import { duracionBreve, hora as formatearHora } from '@/lib/formato'
 import { cn } from '@/lib/utils'
 import { AnuncioRiesgo } from '../components/AnuncioRiesgo'
 import { PageHeader } from '../components/PageHeader'
@@ -15,6 +15,11 @@ import { RiskBadge } from '../components/RiskBadge'
 import { TablaAlternativa } from '../components/TablaAlternativa'
 import { Badge } from '../components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card'
+
+// HU-35 criterio 2: a partir de este umbral, la advertencia de puerta
+// abierta se resalta. Es una guía operativa de la UI, no una regla de
+// alertas del backend (que sigue siendo puramente térmica, HU-21).
+const UMBRAL_PUERTA_ABIERTA_SEGUNDOS = 120
 
 function TarjetaMetrica({
   etiqueta,
@@ -24,6 +29,11 @@ function TarjetaMetrica({
   delta,
   retraso = 0,
   destacada = false,
+  // HU-33 criterio 3: cuando el sensor de ESTA métrica falla, no se muestra
+  // un valor null como si fuera "sin dato" genérico — se dice explícitamente
+  // que el sensor falló, para no confundirlo con "todavía no llegó nada".
+  fallaSensor = false,
+  textoFallaSensor,
 }: {
   etiqueta: string
   valor: string
@@ -32,10 +42,16 @@ function TarjetaMetrica({
   delta?: number | null
   retraso?: number
   destacada?: boolean
+  fallaSensor?: boolean
+  textoFallaSensor?: string
 }) {
   return (
     <Card
-      className={cn('card-lift animate-rise', destacada && 'border-pine-200 bg-primary-tint/50')}
+      className={cn(
+        'card-lift animate-rise',
+        destacada && !fallaSensor && 'border-pine-200 bg-primary-tint/50',
+        fallaSensor && 'border-clay-200 bg-clay-50/40',
+      )}
       style={{ animationDelay: `${retraso}ms` }}
     >
       <CardContent className="p-5">
@@ -44,31 +60,51 @@ function TarjetaMetrica({
           <span
             className={cn(
               'flex size-7 items-center justify-center rounded-md',
-              destacada ? 'bg-pine-100 text-pine-600' : 'bg-cream-100 text-faint',
+              fallaSensor
+                ? 'bg-clay-100 text-clay-600'
+                : destacada
+                  ? 'bg-pine-100 text-pine-600'
+                  : 'bg-cream-100 text-faint',
             )}
           >
-            <Icono className="size-4" />
+            {fallaSensor ? <AlertTriangle className="size-4" /> : <Icono className="size-4" />}
           </span>
         </div>
-        <p className="mt-2 flex items-baseline gap-1">
-          <span className="nums text-[32px] font-semibold leading-none tracking-tight">
-            {valor}
-          </span>
-          <span className="text-sm text-muted">{unidad}</span>
-          {delta != null && Math.abs(delta) >= 0.05 && (
-            <span
-              className={cn(
-                'nums ml-auto text-xs font-medium',
-                delta > 0 ? 'text-honey-600' : 'text-pine-600',
-              )}
-            >
-              {delta > 0 ? '▲' : '▼'} {Math.abs(delta).toFixed(1)}
+        {fallaSensor ? (
+          <p role="alert" className="mt-2 text-sm font-medium leading-snug text-clay-700">
+            {textoFallaSensor}
+          </p>
+        ) : (
+          <p className="mt-2 flex items-baseline gap-1">
+            <span className="nums text-[32px] font-semibold leading-none tracking-tight">
+              {valor}
             </span>
-          )}
-        </p>
+            <span className="text-sm text-muted">{unidad}</span>
+            {delta != null && Math.abs(delta) >= 0.05 && (
+              <span
+                className={cn(
+                  'nums ml-auto text-xs font-medium',
+                  delta > 0 ? 'text-honey-600' : 'text-pine-600',
+                )}
+              >
+                {delta > 0 ? '▲' : '▼'} {Math.abs(delta).toFixed(1)}
+              </span>
+            )}
+          </p>
+        )}
       </CardContent>
     </Card>
   )
+}
+
+// HU-33 criterio 3: `estado_sensores` distingue un sensor que falló
+// (invalido/fisicamente_imposible/ausente) de uno que simplemente no aplica
+// a esta lectura — un valor `null` sin más contexto es indistinguible de
+// "aún no llegó el dato", que es justo la confusión que la historia pide
+// evitar.
+function fallaSensor(lectura: LecturaTermica, campo: string): boolean {
+  const estado = lectura.estado_sensores?.[campo]
+  return estado !== undefined && estado !== null && estado !== 'valido'
 }
 
 function construirOpcionCurva(serie: LecturaTermica[], etiquetas: {
@@ -163,7 +199,9 @@ function resumenVentana(serie: LecturaTermica[]) {
     minima: Math.min(...temps),
     maxima: Math.max(...temps),
     promedio: temps.reduce((suma, v) => suma + v, 0) / temps.length,
-    fueraDeRango: serie.filter((l) => l.nivel_riesgo === 'excursion_critica').length,
+    // HU-34: cuenta excursiones CONFIRMADAS por la regla directa de rango,
+    // no por lo que haya clasificado la IA (`nivel_riesgo`/model_class).
+    fueraDeRango: serie.filter((l) => l.excursion_confirmada).length,
   }
 }
 
@@ -190,8 +228,10 @@ export function DashboardPage() {
 
   return (
     <div>
-      {/* RF-11 + WCAG 4.1.3: la excursión térmica que llega por SSE se anuncia. */}
-      <AnuncioRiesgo nivel={ultima?.nivel_riesgo ?? null} temperatura={ultima?.temperatura_interna} />
+      {/* RF-11 + WCAG 4.1.3: la excursión térmica que llega por SSE se anuncia.
+          HU-34: se anuncia el riesgo EFECTIVO, no la clase cruda de la IA —
+          es lo que decide si hay que actuar, no lo que opinó el modelo. */}
+      <AnuncioRiesgo nivel={ultima?.riesgo_efectivo ?? null} temperatura={ultima?.temperatura_interna} />
 
       <PageHeader eyebrow={t('nav.seccionOperacion')} titulo={t('dashboard.titulo')} descripcion={t('dashboard.descripcion')}>
         <span
@@ -239,6 +279,8 @@ export function DashboardPage() {
               icono={Thermometer}
               delta={deltaDe(ultima.temperatura_interna, previa?.temperatura_interna)}
               destacada
+              fallaSensor={fallaSensor(ultima, 'temperatura_interna')}
+              textoFallaSensor={t('dashboard.fallaSensor')}
             />
             <TarjetaMetrica
               etiqueta={t('dashboard.tempAmbiental')}
@@ -247,11 +289,15 @@ export function DashboardPage() {
               icono={Wind}
               delta={deltaDe(ultima.temperatura_ambiental, previa?.temperatura_ambiental)}
               retraso={60}
+              fallaSensor={fallaSensor(ultima, 'temperatura_ambiental')}
+              textoFallaSensor={t('dashboard.fallaSensor')}
             />
             <TarjetaMetrica
               etiqueta={t('dashboard.humedad')}
               valor={ultima.humedad_ambiental?.toFixed(0) ?? '—'}
               unidad="% HR"
+              fallaSensor={fallaSensor(ultima, 'humedad_ambiental')}
+              textoFallaSensor={t('dashboard.fallaSensor')}
               icono={Droplets}
               retraso={120}
             />
@@ -259,13 +305,34 @@ export function DashboardPage() {
               <CardContent className="p-5">
                 <p className="text-[13px] font-medium text-muted">{t('dashboard.estadoActual')}</p>
                 <div className="mt-2.5">
-                  <RiskBadge nivel={ultima.nivel_riesgo} />
+                  {/* HU-34 criterios 1-3: el semáforo principal es el riesgo
+                      EFECTIVO (regla directa + IA combinadas), nunca la
+                      clase cruda de la IA por sí sola. */}
+                  <RiskBadge nivel={ultima.riesgo_efectivo} />
                 </div>
-                {ultima.nivel_riesgo && (
+                {ultima.riesgo_efectivo && (
                   <p className="mt-1.5 text-xs leading-snug text-muted">
-                    {t(`riesgo.detalle.${ultima.nivel_riesgo}`)}
+                    {t(`riesgo.detalle.${ultima.riesgo_efectivo}`)}
                   </p>
                 )}
+                {ultima.excursion_confirmada && (
+                  <p className="mt-1 text-xs font-medium leading-snug text-clay-700">
+                    {t('dashboard.excursionConfirmada')}
+                  </p>
+                )}
+                {/* HU-34 criterio 4: si la IA clasificó más severo que el
+                    riesgo efectivo (p. ej. excursión crítica con la
+                    temperatura todavía en rango), se muestra diferenciado —
+                    nunca se afirma una excursión que la regla directa no
+                    confirmó. */}
+                {!ultima.excursion_confirmada &&
+                  ultima.nivel_riesgo === 'excursion_critica' &&
+                  ultima.riesgo_efectivo !== 'excursion_critica' && (
+                    <p className="mt-1.5 flex items-start gap-1 text-xs leading-snug text-honey-700">
+                      <ShieldQuestion className="mt-0.5 size-3.5 shrink-0" aria-hidden />
+                      {t('dashboard.clasificacionIaDivergente')}
+                    </p>
+                  )}
                 <p className="mt-1.5 text-xs leading-snug text-muted">
                   {ultima.estado_inferencia && ultima.estado_inferencia !== 'completada' ? (
                     <>
@@ -287,19 +354,48 @@ export function DashboardPage() {
                     t('ia.sinInferencia')
                   )}
                 </p>
-                <p className="mt-2.5 flex items-center gap-1.5 text-[13px] text-muted">
-                  {ultima.apertura_refrigerador ? (
-                    <>
-                      <DoorOpen className="size-3.5 text-honey-600" />
-                      {t('dashboard.puerta')}: {t('dashboard.puertaAbierta')}
-                    </>
-                  ) : (
-                    <>
-                      <DoorClosed className="size-3.5" />
-                      {t('dashboard.puerta')}: {t('dashboard.puertaCerrada')}
-                    </>
-                  )}
-                </p>
+                {/* HU-35 criterio 4: sin MC-38 instalado, `apertura_refrigerador`
+                    llega como null — no se presenta como "cerrada", que
+                    sería una falsa lectura de un sensor que no existe. */}
+                {ultima.apertura_refrigerador === null ? (
+                  <p className="mt-2.5 flex items-center gap-1.5 text-[13px] text-faint">
+                    <ShieldQuestion className="size-3.5" aria-hidden />
+                    {t('dashboard.puerta')}: {t('dashboard.puertaSinSensor')}
+                  </p>
+                ) : ultima.apertura_refrigerador ? (
+                  (() => {
+                    // HU-35 criterio 2: se resalta y se muestra el tiempo
+                    // transcurrido cuando supera el umbral configurado.
+                    const duracion = ultima.duracion_apertura_segundos ?? 0
+                    const prolongada = duracion >= UMBRAL_PUERTA_ABIERTA_SEGUNDOS
+                    return (
+                      <p
+                        className={cn(
+                          'mt-2.5 flex items-center gap-1.5 text-[13px]',
+                          prolongada ? 'font-medium text-clay-700' : 'text-muted',
+                        )}
+                        role={prolongada ? 'alert' : undefined}
+                        data-testid="puerta-advertencia"
+                      >
+                        <DoorOpen
+                          className={cn('size-3.5', prolongada ? 'text-clay-600' : 'text-honey-600')}
+                        />
+                        {t('dashboard.puerta')}: {t('dashboard.puertaAbierta')}
+                        {ultima.duracion_apertura_segundos !== null && (
+                          <span className="nums">· {duracionBreve(duracion)}</span>
+                        )}
+                        {prolongada && (
+                          <span className="sr-only"> — {t('dashboard.puertaProlongada')}</span>
+                        )}
+                      </p>
+                    )
+                  })()
+                ) : (
+                  <p className="mt-2.5 flex items-center gap-1.5 text-[13px] text-muted">
+                    <DoorClosed className="size-3.5" />
+                    {t('dashboard.puerta')}: {t('dashboard.puertaCerrada')}
+                  </p>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -351,7 +447,7 @@ export function DashboardPage() {
                   formatearHora(l.timestamp),
                   l.temperatura_interna?.toFixed(1) ?? '—',
                   l.temperatura_ambiental?.toFixed(1) ?? '—',
-                  l.nivel_riesgo ? t(`riesgo.${l.nivel_riesgo}`) : '—',
+                  l.riesgo_efectivo ? t(`riesgo.${l.riesgo_efectivo}`) : '—',
                 ])}
               />
 

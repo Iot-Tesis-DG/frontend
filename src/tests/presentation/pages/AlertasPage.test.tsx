@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { AlertaTermica } from '@/domain/entities/AlertaTermica'
@@ -20,6 +21,9 @@ function alerta(over: Partial<AlertaTermica> = {}): AlertaTermica {
     revisada: false,
     revisada_por: null,
     created_at: '2026-07-25T12:00:00Z',
+    estado: 'pendiente',
+    reconocida_en: null,
+    atendida_en: null,
     ...over,
   }
 }
@@ -33,20 +37,20 @@ function sesionCon(rol: Rol) {
 }
 
 function montar(alertas: AlertaTermica[]) {
-  const marcarRevisada = vi.fn()
+  const reconocerAlerta = vi.fn()
   useAlertas.mockReturnValue({
     alertas,
     cargando: false,
-    filtro: 'pendientes',
+    filtro: 'pendiente',
     setFiltro: vi.fn(),
-    marcarRevisada,
+    reconocerAlerta,
     registrarAccionCorrectiva: vi.fn(),
   })
   render(<AlertasPage />)
-  return marcarRevisada
+  return reconocerAlerta
 }
 
-describe('AlertasPage (RF-09, RF-10, HU-20/21/27)', () => {
+describe('AlertasPage (RF-09, RF-10, HU-20/21/23/27/41)', () => {
   beforeEach(() => {
     useAlertas.mockReset()
     sesionCon('farmaceutico')
@@ -63,31 +67,76 @@ describe('AlertasPage (RF-09, RF-10, HU-20/21/27)', () => {
     expect(screen.getByRole('cell', { name: /fuera del rango 2-8/i })).toBeInTheDocument()
   })
 
-  it('ofrece los tres filtros de revisión', () => {
+  it('ofrece los cuatro filtros de la máquina de estados', () => {
     montar([alerta()])
 
     const nombres = screen.getAllByRole('button').map((b) => b.textContent)
-    expect(nombres).toEqual(expect.arrayContaining(['Pendientes', 'Revisadas', 'Todas']))
+    expect(nombres).toEqual(
+      expect.arrayContaining(['Pendientes', 'Reconocidas', 'Atendidas', 'Todas']),
+    )
   })
 
-  it('permite a un farmacéutico marcar la alerta como revisada', () => {
+  it('permite a un farmacéutico reconocer una alerta pendiente', () => {
     sesionCon('farmaceutico')
-    montar([alerta({ revisada: false })])
+    montar([alerta({ estado: 'pendiente' })])
 
-    expect(screen.getByRole('button', { name: /marcar revisada/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /reconocer/i })).toBeInTheDocument()
   })
 
-  it('no ofrece el botón de revisión a un técnico (RBAC en la vista)', () => {
-    // El backend ya rechaza la acción por rol; la vista no debe ofrecer un
-    // botón que sólo puede terminar en un 403.
+  it('no ofrece el botón de reconocer a un técnico (RBAC en la vista)', () => {
+    // El backend ya rechaza la acción por rol (require_roles(FARMACEUTICO));
+    // la vista no debe ofrecer un botón que solo puede terminar en un 403.
     sesionCon('tecnico')
-    montar([alerta({ revisada: false })])
+    montar([alerta({ estado: 'pendiente' })])
 
-    expect(screen.queryByRole('button', { name: /marcar revisada/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /reconocer/i })).not.toBeInTheDocument()
+  })
+
+  it('un técnico sí puede registrar la acción correctiva aunque no reconozca', () => {
+    // HU-23: registrar la acción marca ATENDIDA directamente desde
+    // PENDIENTE, sin exigir el paso de reconocimiento.
+    sesionCon('tecnico')
+    montar([alerta({ estado: 'pendiente' })])
+
+    expect(screen.getByRole('button', { name: /acción correctiva/i })).toBeInTheDocument()
+  })
+
+  it('no ofrece ninguna acción a un auditor (rol de solo lectura)', () => {
+    sesionCon('auditor')
+    montar([alerta({ estado: 'pendiente' })])
+
+    expect(screen.queryByRole('button', { name: /reconocer/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /acción correctiva/i })).not.toBeInTheDocument()
+  })
+
+  it('no ofrece ninguna acción sobre una alerta ya atendida', () => {
+    sesionCon('farmaceutico')
+    montar([alerta({ estado: 'atendida' })])
+
+    expect(screen.queryByRole('button', { name: /reconocer/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /acción correctiva/i })).not.toBeInTheDocument()
   })
 
   it('avisa cuando no hay alertas para el filtro activo', () => {
     montar([])
     expect(screen.getByText(/no hay alertas|sin alertas/i)).toBeInTheDocument()
+  })
+
+  it('avisa cuando otro usuario ya reconoció la alerta (HU-27 Escenario 2)', async () => {
+    const usuario = userEvent.setup()
+    const reconocerAlerta = vi.fn().mockResolvedValue('conflicto')
+    useAlertas.mockReturnValue({
+      alertas: [alerta({ estado: 'pendiente' })],
+      cargando: false,
+      filtro: 'pendiente',
+      setFiltro: vi.fn(),
+      reconocerAlerta,
+      registrarAccionCorrectiva: vi.fn(),
+    })
+    render(<AlertasPage />)
+
+    await usuario.click(screen.getByRole('button', { name: /reconocer/i }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(/actualizada por otra persona/i)
   })
 })

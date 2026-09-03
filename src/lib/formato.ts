@@ -36,3 +36,13 @@ export function fechaCorta(iso: string | null | undefined): string {
   if (Number.isNaN(fecha.getTime())) return '—'
   return fecha.toLocaleDateString(localeActual())
 }
+
+/** HU-35: duración de una apertura de puerta en "M:SS" — formato de reloj,
+ * no traducible por diseño (igual que "3:20" en cualquier reproductor), así
+ * que no depende de `i18n` a diferencia del resto de este módulo. */
+export function duracionBreve(segundos: number): string {
+  const total = Math.max(0, Math.round(segundos))
+  const minutos = Math.floor(total / 60)
+  const resto = total % 60
+  return `${minutos}:${String(resto).padStart(2, '0')}`
+}

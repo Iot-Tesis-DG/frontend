@@ -47,25 +47,34 @@ const SECCIONES: SeccionNav[] = [
     items: [
       // La guía va primero y la ve todo el mundo: es el punto de entrada para
       // quien abre el sistema por primera vez.
-      { ruta: '/guia', icono: BookOpen, claveI18n: 'nav.guia', roles: ['farmaceutico', 'tecnico'] },
-      { ruta: '/dashboard', icono: Activity, claveI18n: 'nav.dashboard', roles: ['farmaceutico', 'tecnico'] },
-      { ruta: '/historial', icono: History, claveI18n: 'nav.historial', roles: ['farmaceutico', 'tecnico'] },
-      { ruta: '/alertas', icono: Bell, claveI18n: 'nav.alertas', roles: ['farmaceutico', 'tecnico'] },
+      //
+      // HU-41: AUDITOR entra aquí explícitamente en dashboard/historial/
+      // alertas/trazabilidad — el backend le da lectura sobre los mismos
+      // endpoints (lecturas_router, alertas_router, trazabilidad_router).
+      { ruta: '/guia', icono: BookOpen, claveI18n: 'nav.guia', roles: ['farmaceutico', 'tecnico', 'auditor'] },
+      { ruta: '/dashboard', icono: Activity, claveI18n: 'nav.dashboard', roles: ['farmaceutico', 'tecnico', 'auditor'] },
+      { ruta: '/historial', icono: History, claveI18n: 'nav.historial', roles: ['farmaceutico', 'tecnico', 'auditor'] },
+      { ruta: '/alertas', icono: Bell, claveI18n: 'nav.alertas', roles: ['farmaceutico', 'tecnico', 'auditor'] },
     ],
   },
   {
     claveI18n: 'nav.seccionCumplimiento',
     items: [
-      { ruta: '/trazabilidad', icono: Link2, claveI18n: 'nav.trazabilidad', roles: ['farmaceutico', 'tecnico'] },
+      { ruta: '/trazabilidad', icono: Link2, claveI18n: 'nav.trazabilidad', roles: ['farmaceutico', 'tecnico', 'auditor'] },
+      // El checklist BPA NO está en la matriz de AUDITOR del backend
+      // (checklist_router.py solo admite FARMACEUTICO/ADMINISTRADOR).
       { ruta: '/checklist-bpa', icono: ClipboardCheck, claveI18n: 'nav.checklist', roles: ['farmaceutico'] },
-      { ruta: '/reportes', icono: FileText, claveI18n: 'nav.reportes', roles: ['farmaceutico'] },
-      { ruta: '/metricas-ia', icono: Brain, claveI18n: 'nav.metricasIA', roles: ['farmaceutico'] },
+      { ruta: '/reportes', icono: FileText, claveI18n: 'nav.reportes', roles: ['farmaceutico', 'auditor'] },
+      { ruta: '/metricas-ia', icono: Brain, claveI18n: 'nav.metricasIA', roles: ['farmaceutico', 'auditor'] },
     ],
   },
   {
     claveI18n: 'nav.seccionAdministracion',
     items: [
-      { ruta: '/auditoria', icono: ScrollText, claveI18n: 'nav.auditoria', roles: [] },
+      // HU-41: auditoria sí es de AUDITOR (require_roles(ADMINISTRADOR,
+      // AUDITOR) en auditoria_router.py) — el resto de esta sección sigue
+      // siendo exclusiva del administrador.
+      { ruta: '/auditoria', icono: ScrollText, claveI18n: 'nav.auditoria', roles: ['auditor'] },
       { ruta: '/usuarios', icono: Users, claveI18n: 'nav.usuarios', roles: [] },
       { ruta: '/dispositivos', icono: HardDrive, claveI18n: 'nav.dispositivos', roles: [] },
       { ruta: '/firmware', icono: DownloadCloud, claveI18n: 'nav.firmware', roles: [] },

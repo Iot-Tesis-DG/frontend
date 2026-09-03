@@ -1,3 +1,4 @@
+import type { EstadoAlerta } from '../value-objects/EstadoAlerta'
 import type { NivelRiesgo } from '../value-objects/NivelRiesgo'
 
 export interface AlertaTermica {
@@ -6,9 +7,16 @@ export interface AlertaTermica {
   device_id: string
   nivel_riesgo: NivelRiesgo
   mensaje: string
+  // `revisada`/`revisada_por` se conservan por compatibilidad (el backend
+  // los sigue enviando en sincronía con `estado`), pero HU-23 hace de
+  // `estado` la fuente de verdad para la UI — no derivar nada de estos dos.
   revisada: boolean
   revisada_por: string | null
   created_at: string | null
+  // HU-23: máquina de estados PENDIENTE -> RECONOCIDA -> ATENDIDA.
+  estado: EstadoAlerta
+  reconocida_en: string | null
+  atendida_en: string | null
 }
 
 export interface AccionCorrectiva {

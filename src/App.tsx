@@ -115,14 +115,34 @@ export function App() {
               <Route path="/alertas" element={<Pagina><AlertasPage /></Pagina>} />
               <Route path="/trazabilidad" element={<Pagina><TrazabilidadPage /></Pagina>} />
 
-              <Route element={<RequireRoles roles={['farmaceutico']} />}>
-                <Route path="/checklist-bpa" element={<Pagina><ChecklistBPAPage /></Pagina>} />
+              {/* HU-41: AUDITOR tiene acceso de solo lectura a reportes y
+                  métricas IA, igual que el backend (require_roles(FARMACEUTICO,
+                  AUDITOR) en reportes_router.py / ia_router.py). */}
+              <Route element={<RequireRoles roles={['farmaceutico', 'auditor']} />}>
                 <Route path="/reportes" element={<Pagina><ReportesPage /></Pagina>} />
                 <Route path="/metricas-ia" element={<Pagina><MetricasIAPage /></Pagina>} />
               </Route>
 
-              <Route element={<RequireRoles roles={[]} />}>
+              {/* El checklist BPA no está en la matriz de AUDITOR en el
+                  backend (checklist_router.py solo admite FARMACEUTICO /
+                  ADMINISTRADOR): queda fuera del grupo de arriba a propósito. */}
+              <Route element={<RequireRoles roles={['farmaceutico']} />}>
+                <Route path="/checklist-bpa" element={<Pagina><ChecklistBPAPage /></Pagina>} />
+              </Route>
+
+              {/* HU-41: la bitácora de auditoría es justamente lo que un
+                  AUDITOR necesita leer (require_roles(ADMINISTRADOR, AUDITOR)
+                  en auditoria_router.py). */}
+              <Route element={<RequireRoles roles={['auditor']} />}>
                 <Route path="/auditoria" element={<Pagina><AuditoriaPage /></Pagina>} />
+              </Route>
+
+              {/* Gestión de usuarios/dispositivos/firmware: sigue siendo
+                  exclusiva del administrador — el backend no le da AUDITOR
+                  acceso de escritura ni de lectura a estas pantallas
+                  completas (solo a un sub-recurso puntual de dispositivos,
+                  el historial de configuración, sin UI propia todavía). */}
+              <Route element={<RequireRoles roles={[]} />}>
                 <Route path="/usuarios" element={<Pagina><UsuariosPage /></Pagina>} />
                 <Route path="/dispositivos" element={<Pagina><DispositivosPage /></Pagina>} />
                 <Route path="/firmware" element={<Pagina><FirmwarePage /></Pagina>} />

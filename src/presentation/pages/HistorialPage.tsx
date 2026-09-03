@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { DoorClosed, DoorOpen, FilterX, SlidersHorizontal } from 'lucide-react'
+import { DoorClosed, DoorOpen, FilterX, ShieldQuestion, SlidersHorizontal } from 'lucide-react'
 
 import { useHistorial, type FiltrosHistorial } from '@/application/hooks/useHistorial'
 import { NIVELES_RIESGO } from '@/domain/value-objects/NivelRiesgo'
@@ -157,14 +157,20 @@ export function HistorialPage() {
                     {lectura.humedad_ambiental?.toFixed(0) ?? '—'} %
                   </TableCell>
                   <TableCell>
-                    {lectura.apertura_refrigerador ? (
+                    {/* HU-35 criterio 4: sin MC-38 instalado, null no es
+                        "cerrada" — se marca aparte para no fingir un dato. */}
+                    {lectura.apertura_refrigerador === null ? (
+                      <ShieldQuestion role="img" className="size-4 text-faint" aria-label={t('dashboard.puertaSinSensor')} />
+                    ) : lectura.apertura_refrigerador ? (
                       <DoorOpen role="img" className="size-4 text-honey-600" aria-label={t('dashboard.puertaAbierta')} />
                     ) : (
                       <DoorClosed role="img" className="size-4 text-faint" aria-label={t('dashboard.puertaCerrada')} />
                     )}
                   </TableCell>
                   <TableCell>
-                    <RiskBadge nivel={lectura.nivel_riesgo} />
+                    {/* HU-34: el historial también debe mostrar el riesgo
+                        EFECTIVO, no la clase cruda de la IA. */}
+                    <RiskBadge nivel={lectura.riesgo_efectivo} />
                   </TableCell>
                 </TableRow>
               ))

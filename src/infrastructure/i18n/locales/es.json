@@ -52,7 +52,8 @@
   "roles": {
     "administrador": "Director Técnico (Químico Farmacéutico)",
     "farmaceutico": "Personal Técnico de Farmacia",
-    "tecnico": "Cajero / Atención"
+    "tecnico": "Cajero / Atención",
+    "auditor": "Auditor (solo lectura)"
   },
   "riesgo": {
     "normal": "Normal",
@@ -88,9 +89,14 @@
     "tempAmbiental": "Temperatura ambiental",
     "humedad": "Humedad relativa",
     "estadoActual": "Estado actual",
+    "fallaSensor": "Falla de sensor — sin lectura disponible",
+    "excursionConfirmada": "Excursión confirmada por temperatura (regla directa 2–8 °C)",
+    "clasificacionIaDivergente": "La IA clasificó excursión crítica, pero la temperatura sigue dentro de 2–8 °C: no se confirma una excursión.",
     "puerta": "Puerta",
     "puertaAbierta": "Abierta",
     "puertaCerrada": "Cerrada",
+    "puertaSinSensor": "Sin sensor MC-38 instalado",
+    "puertaProlongada": "Apertura prolongada: revisar el refrigerador",
     "conectado": "En línea",
     "desconectado": "Sin conexión",
     "tiempoReal": "tiempo real",
@@ -143,24 +149,32 @@
   "alertas": {
     "titulo": "Gestión de alertas",
     "descripcion": "Alertas generadas por el clasificador de riesgo térmico",
-    "pendientes": "Pendientes",
-    "revisadas": "Revisadas",
-    "todas": "Todas",
-    "revisar": "Marcar revisada",
-    "revisada": "Revisada",
+    "filtro": {
+      "pendiente": "Pendientes",
+      "reconocida": "Reconocidas",
+      "atendida": "Atendidas",
+      "todas": "Todas"
+    },
+    "estadoAlerta": {
+      "pendiente": "Pendiente",
+      "reconocida": "Reconocida",
+      "atendida": "Atendida"
+    },
+    "reconocer": "Reconocer",
     "accionCorrectiva": "Acción correctiva",
     "registrarAccion": "Registrar acción correctiva",
     "descripcionAccion": "Describe la acción tomada…",
     "guardarAccion": "Guardar acción",
     "guardando": "Guardando…",
     "accionRegistrada": "Acción correctiva registrada.",
+    "conflictoEstado": "Esta alerta ya fue actualizada por otra persona. La lista se refrescó con su estado actual.",
     "sinAlertas": "No hay alertas registradas. El refrigerador se mantiene estable.",
     "fecha": "Fecha",
     "mensaje": "Mensaje",
     "estado": "Estado",
     "acciones": "Acciones",
-    "soloFarmaceutico": "Solo el personal técnico de farmacia puede marcar alertas como revisadas.",
-    "filtroEstado": "Filtrar alertas por estado de revisión",
+    "soloFarmaceutico": "Solo el personal técnico de farmacia puede reconocer alertas.",
+    "filtroEstado": "Filtrar alertas por estado de seguimiento",
     "descripcionAccionPlaceholder": "Ej.: se reubicaron los viales y se ajustó el termostato a 5 °C",
     "descripcionAccionAyuda": "Describe qué se hizo para corregir la desviación. Queda registrado en la trazabilidad.",
     "etiquetaAccion": "Descripción de la acción correctiva"
@@ -254,6 +268,7 @@
   "auditoria": {
     "titulo": "Bitácora de auditoría",
     "descripcion": "Acciones críticas registradas en el sistema",
+    "filtros": "Filtros",
     "fecha": "Fecha",
     "accion": "Acción",
     "recurso": "Recurso",
@@ -288,7 +303,13 @@
       "jubilacion": "Jubilación",
       "otros": "Otros"
     },
-    "desactivarA": "Desactivar a {{nombre}}"
+    "desactivarA": "Desactivar a {{nombre}}",
+    "cambiarRol": "Cambiar rol",
+    "cambiarRolA": "Cambiar el rol de {{nombre}}",
+    "confirmarCambiarRol": "¿Cambiar el rol de {{nombre}}? El cambio se aplica de inmediato: en su próxima operación protegida, el backend ya exige los permisos del rol nuevo.",
+    "rolActualizadoOk": "Rol actualizado correctamente.",
+    "nuevoRol": "Rol nuevo",
+    "cambiando": "Guardando…"
   },
   "privacidad": {
     "titulo": "Aviso de privacidad",
