@@ -16,7 +16,9 @@
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
     "csp:demo": "node scripts/generar-vercel-json.mjs",
-    "csp:prod": "node scripts/generar-vercel-json.mjs"
+    "csp:prod": "node scripts/generar-vercel-json.mjs",
+    "requirements:generate": "node scripts/parse-user-stories.mjs",
+    "requirements:check": "node scripts/parse-user-stories.mjs --check"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.6",
