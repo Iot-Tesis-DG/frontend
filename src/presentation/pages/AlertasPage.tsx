@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router'
 import { BellOff, CheckCheck, ClipboardPen, History } from 'lucide-react'
 
 import { useAlertas, type FiltroEstado } from '@/application/hooks/useAlertas'
@@ -70,12 +71,17 @@ export function AlertasPage() {
   const [alertaDetalle, setAlertaDetalle] = useState<AlertaTermica | null>(null)
   const [ciclo, setCiclo] = useState<AccionCorrectiva[]>([])
   const [cargandoCiclo, setCargandoCiclo] = useState(false)
+  const [errorCiclo, setErrorCiclo] = useState(false)
 
   const verDetalle = async (alerta: AlertaTermica) => {
     setAlertaDetalle(alerta)
+    setCiclo([])
+    setErrorCiclo(false)
     setCargandoCiclo(true)
     try {
       setCiclo(await obtenerCicloAtencion(alerta.id))
+    } catch {
+      setErrorCiclo(true)
     } finally {
       setCargandoCiclo(false)
     }
@@ -210,16 +216,14 @@ export function AlertasPage() {
                           {t('alertas.accionCorrectiva')}
                         </Button>
                       )}
-                      {alerta.estado !== 'pendiente' && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => void verDetalle(alerta)}
-                          title={t('alertas.verDetalle')}
-                        >
-                          <History />
-                        </Button>
-                      )}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => void verDetalle(alerta)}
+                        aria-label={`${t('alertas.verDetalle')}: ${alerta.device_id}`}
+                      >
+                        <History />
+                      </Button>
                     </div>
                     {conflictoReconocer === alerta.id && (
                       <p role="alert" className="text-xs text-clay-700">
@@ -306,6 +310,18 @@ export function AlertasPage() {
         <DialogContent>
           <DialogTitle>{t('alertas.cicloAtencion')}</DialogTitle>
           <DialogDescription>{alertaDetalle?.mensaje}</DialogDescription>
+          {alertaDetalle && (
+            <dl className="mt-4 grid grid-cols-2 gap-3 rounded-lg border border-border bg-cream-100/60 p-3 text-sm">
+              <div>
+                <dt className="text-xs text-muted">{t('historial.dispositivo')}</dt>
+                <dd className="nums mt-1 font-medium">{alertaDetalle.device_id}</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-muted">{t('historial.riesgo')}</dt>
+                <dd className="mt-1"><RiskBadge nivel={alertaDetalle.nivel_riesgo} /></dd>
+              </div>
+            </dl>
+          )}
           <ol className="mt-3 max-h-96 space-y-3 overflow-y-auto border-l-2 border-border pl-4">
             {alertaDetalle?.created_at && (
               <li>
@@ -324,6 +340,8 @@ export function AlertasPage() {
             )}
             {cargandoCiclo ? (
               <li className="text-sm text-muted">{t('app.cargando')}</li>
+            ) : errorCiclo ? (
+              <li role="alert" className="text-sm text-clay-700">{t('comunes.error')}</li>
             ) : (
               ciclo.map((accion) => (
                 <li key={accion.id}>
@@ -336,11 +354,14 @@ export function AlertasPage() {
                 </li>
               ))
             )}
-            {!cargandoCiclo && ciclo.length === 0 && (
+            {!cargandoCiclo && !errorCiclo && ciclo.length === 0 && (
               <li className="text-sm text-muted">{t('alertas.sinAcciones')}</li>
             )}
           </ol>
-          <div className="mt-4 flex justify-end">
+          <div className="mt-4 flex items-center justify-between gap-2">
+            <Link to="/historial" onClick={() => setAlertaDetalle(null)} className="text-sm font-medium text-pine-700 underline-offset-2 hover:underline">
+              {t('nav.historial')}
+            </Link>
             <Button variant="ghost" onClick={() => setAlertaDetalle(null)}>
               {t('comunes.cerrar')}
             </Button>

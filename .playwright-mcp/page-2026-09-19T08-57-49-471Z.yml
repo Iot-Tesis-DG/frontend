@@ -1,0 +1,44 @@
+- generic [ref=f13e3]:
+  - generic [ref=f13e4]:
+    - paragraph [aria-hidden]: 2–8°
+    - generic [ref=f13e20]:
+      - paragraph [ref=f13e21]: Cadena de Frío
+      - paragraph [ref=f13e22]: Monitoreo farmacéutico
+    - generic [ref=f13e23]:
+      - paragraph [ref=f13e24]: Cada grado cuenta.
+      - paragraph [ref=f13e25]: Monitoreo continuo, alertas tempranas y trazabilidad verificable para la conservación de medicamentos termolábiles.
+    - generic [ref=f13e26]:
+      - generic [ref=f13e27]: Rango de conservación 2 °C – 8 °C
+      - generic [ref=f13e37]: Conexión segura y cifrada
+  - generic [ref=f13e41]:
+    - group "Idioma" [ref=f13e43]:
+      - button "ES" [pressed] [ref=f13e44] [cursor=pointer]
+      - button "EN" [ref=f13e45] [cursor=pointer]
+    - generic [ref=f13e46]:
+      - generic [ref=f13e47]:
+        - paragraph [ref=f13e48]: Monitoreo farmacéutico
+        - heading "Iniciar sesión" [level=1] [ref=f13e49]
+        - paragraph [ref=f13e50]: Accede al panel de monitoreo de tu farmacia
+      - status [ref=f13e51]: Por tu seguridad, la sesión se cierra al recargar la página. Vuelve a ingresar.
+      - generic [ref=f13e54]:
+        - generic [ref=f13e55]:
+          - generic [ref=f13e56]: Correo electrónico
+          - textbox "Correo electrónico" [ref=f13e57]:
+            - /placeholder: farmacia@ejemplo.com
+        - generic [ref=f13e58]:
+          - generic [ref=f13e59]: Contraseña
+          - textbox "Contraseña" [ref=f13e60]:
+            - /placeholder: ••••••••
+        - button "Ingresar" [ref=f13e61] [cursor=pointer]
+      - generic [ref=f13e62]:
+        - paragraph [ref=f13e63]: Acceso de demostración
+        - paragraph [ref=f13e66]: Elige un rol para explorar el sistema con datos simulados. No se requiere contraseña.
+        - generic [ref=f13e67]:
+          - button "Personal Técnico de Farmacia" [ref=f13e68] [cursor=pointer]
+          - button "Cajero / Atención" [ref=f13e69] [cursor=pointer]
+          - button "Director Técnico (Químico Farmacéutico)" [ref=f13e70] [cursor=pointer]
+          - button "Auditor (solo lectura)" [ref=f13e71] [cursor=pointer]
+      - generic [ref=f13e72]: o continúa con
+      - generic [ref=f13e75]:
+        - button "Continuar con Google" [ref=f13e76] [cursor=pointer]
+        - button "Continuar con Facebook" [ref=f13e82] [cursor=pointer]

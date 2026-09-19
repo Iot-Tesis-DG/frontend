@@ -69,6 +69,7 @@ export function TrazabilidadPage() {
     [registros, pagina],
   )
   const [tipoEvento, setTipoEvento] = useState('')
+  const [mostrarSellos, setMostrarSellos] = useState(false)
   const [aislando, setAislando] = useState(false)
   const [confirmarAislar, setConfirmarAislar] = useState(false)
   const [errorAislar, setErrorAislar] = useState(false)
@@ -194,6 +195,15 @@ export function TrazabilidadPage() {
           </CardContent>
         </Card>
       )}
+
+      <div className="mb-5 flex flex-wrap items-center gap-2 rounded-(--radius-card) border border-border bg-surface px-4 py-3 text-sm text-muted">
+        <span className="font-medium text-foreground">{t('trazabilidad.registroN')}</span>
+        <span aria-hidden className="text-pine-600">→</span>
+        <span>{t('trazabilidad.selloCompartido')}</span>
+        <span aria-hidden className="text-pine-600">→</span>
+        <span className="font-medium text-foreground">{t('trazabilidad.registroSiguiente')}</span>
+        <span className="w-full text-xs">{t('trazabilidad.cadenaExplicacion')}</span>
+      </div>
 
       {/* ── HU-37: verificación acotada a un dispositivo y periodo ──── */}
       <Card className="mb-5 animate-rise">
@@ -324,25 +334,37 @@ export function TrazabilidadPage() {
       </div>
 
       <div className="animate-rise" style={{ animationDelay: '60ms' }}>
+        <button
+          type="button"
+          aria-expanded={mostrarSellos}
+          onClick={() => setMostrarSellos((actual) => !actual)}
+          className="mb-3 rounded-md text-sm font-medium text-pine-700 underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        >
+          {mostrarSellos ? t('trazabilidad.ocultarSellos') : t('trazabilidad.mostrarSellos')}
+        </button>
         <Table titulo={t('trazabilidad.titulo')} cargando={cargando}>
           <TableHeader>
             <TableRow>
               <TableHead>{t('trazabilidad.fecha')}</TableHead>
               <TableHead>{t('trazabilidad.evento')}</TableHead>
               <TableHead>{t('historial.dispositivo')}</TableHead>
-              <TableHead title={t('trazabilidad.selloAyuda')} className="cursor-help">
-                {t('trazabilidad.hashAnterior')}
-              </TableHead>
-              <TableHead title={t('trazabilidad.selloAyuda')} className="cursor-help">
-                {t('trazabilidad.hash')}
-              </TableHead>
+              {mostrarSellos && (
+                <>
+                  <TableHead title={t('trazabilidad.selloAyuda')} className="cursor-help">
+                    {t('trazabilidad.hashAnterior')}
+                  </TableHead>
+                  <TableHead title={t('trazabilidad.selloAyuda')} className="cursor-help">
+                    {t('trazabilidad.hash')}
+                  </TableHead>
+                </>
+              )}
             </TableRow>
           </TableHeader>
           <TableBody>
             {cargando ? (
-              <TableEmpty colSpan={5}>{t('app.cargando')}</TableEmpty>
+              <TableEmpty colSpan={mostrarSellos ? 5 : 3}>{t('app.cargando')}</TableEmpty>
             ) : registros.length === 0 ? (
-              <TableEmpty colSpan={5}>
+              <TableEmpty colSpan={mostrarSellos ? 5 : 3}>
                 <span className="inline-flex flex-col items-center gap-2">
                   <Link2 className="size-5 text-faint" aria-hidden />
                   {t('trazabilidad.sinRegistros')}
@@ -373,12 +395,12 @@ export function TrazabilidadPage() {
                     <Badge variant="neutral">{registro.tipo_evento}</Badge>
                   </TableCell>
                   <TableCell className="text-[13px]">{registro.device_id ?? '—'}</TableCell>
-                  <TableCell>
-                    <HashCorto hash={registro.previous_hash} />
-                  </TableCell>
-                  <TableCell>
-                    <HashCorto hash={registro.hash_actual} />
-                  </TableCell>
+                  {mostrarSellos && (
+                    <>
+                      <TableCell><HashCorto hash={registro.previous_hash} /></TableCell>
+                      <TableCell><HashCorto hash={registro.hash_actual} /></TableCell>
+                    </>
+                  )}
                 </TableRow>
                 )
               })

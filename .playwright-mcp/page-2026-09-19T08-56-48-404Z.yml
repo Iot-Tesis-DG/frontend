@@ -1,0 +1,43 @@
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - paragraph [aria-hidden]: 2–8°
+    - generic [ref=e20]:
+      - paragraph [ref=e21]: Cadena de Frío
+      - paragraph [ref=e22]: Monitoreo farmacéutico
+    - generic [ref=e23]:
+      - paragraph [ref=e24]: Cada grado cuenta.
+      - paragraph [ref=e25]: Monitoreo continuo, alertas tempranas y trazabilidad verificable para la conservación de medicamentos termolábiles.
+    - generic [ref=e26]:
+      - generic [ref=e27]: Rango de conservación 2 °C – 8 °C
+      - generic [ref=e37]: Conexión segura y cifrada
+  - generic [ref=e41]:
+    - group "Idioma" [ref=e43]:
+      - button "ES" [pressed] [ref=e44] [cursor=pointer]
+      - button "EN" [ref=e45] [cursor=pointer]
+    - generic [ref=e46]:
+      - generic [ref=e47]:
+        - paragraph [ref=e48]: Monitoreo farmacéutico
+        - heading "Iniciar sesión" [level=1] [ref=e49]
+        - paragraph [ref=e50]: Accede al panel de monitoreo de tu farmacia
+      - generic [ref=e51]:
+        - generic [ref=e52]:
+          - generic [ref=e53]: Correo electrónico
+          - textbox "Correo electrónico" [ref=e54]:
+            - /placeholder: farmacia@ejemplo.com
+        - generic [ref=e55]:
+          - generic [ref=e56]: Contraseña
+          - textbox "Contraseña" [ref=e57]:
+            - /placeholder: ••••••••
+        - button "Ingresar" [ref=e58] [cursor=pointer]
+      - generic [ref=e59]:
+        - paragraph [ref=e60]: Acceso de demostración
+        - paragraph [ref=e63]: Elige un rol para explorar el sistema con datos simulados. No se requiere contraseña.
+        - generic [ref=e64]:
+          - button "Personal Técnico de Farmacia" [ref=e65] [cursor=pointer]
+          - button "Cajero / Atención" [ref=e66] [cursor=pointer]
+          - button "Director Técnico (Químico Farmacéutico)" [ref=e67] [cursor=pointer]
+          - button "Auditor (solo lectura)" [ref=e68] [cursor=pointer]
+      - generic [ref=e69]: o continúa con
+      - generic [ref=e72]:
+        - button "Continuar con Google" [ref=e73] [cursor=pointer]
+        - button "Continuar con Facebook" [ref=e79] [cursor=pointer]

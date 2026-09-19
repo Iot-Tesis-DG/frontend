@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { AlertaTermica } from '@/domain/entities/AlertaTermica'
@@ -47,7 +48,7 @@ function montar(alertas: AlertaTermica[]) {
     registrarAccionCorrectiva: vi.fn(),
     obtenerCicloAtencion: vi.fn().mockResolvedValue([]),
   })
-  render(<AlertasPage />)
+  render(<MemoryRouter><AlertasPage /></MemoryRouter>)
   return reconocerAlerta
 }
 
@@ -82,6 +83,28 @@ describe('AlertasPage (RF-09, RF-10, HU-20/21/23/27/41)', () => {
     montar([alerta({ estado: 'pendiente' })])
 
     expect(screen.getByRole('button', { name: /reconocer/i })).toBeInTheDocument()
+  })
+
+  it('abre detalle de alerta pendiente para consulta, incluso con rol auditor', async () => {
+    sesionCon('auditor')
+    montar([alerta({ estado: 'pendiente' })])
+
+    await userEvent.setup().click(screen.getByRole('button', { name: /cronología de atención.*FARM-01-CDL/i }))
+
+    const dialogo = await screen.findByRole('dialog')
+    expect(dialogo).toHaveTextContent('FARM-01-CDL')
+    expect(screen.getByRole('link', { name: /historial/i })).toHaveAttribute('href', '/historial')
+  })
+
+  it('informa fallo al cargar cronología sin afirmar que no hay acciones', async () => {
+    sesionCon('auditor')
+    montar([alerta()])
+    useAlertas.mock.results[0].value.obtenerCicloAtencion.mockRejectedValue(new Error('red caída'))
+
+    await userEvent.setup().click(screen.getByRole('button', { name: /cronología de atención.*FARM-01-CDL/i }))
+
+    expect(await screen.findByRole('alert')).toBeInTheDocument()
+    expect(screen.queryByText(/sin acciones/i)).not.toBeInTheDocument()
   })
 
   it('no ofrece el botón de reconocer a un técnico (RBAC en la vista)', () => {
@@ -135,7 +158,7 @@ describe('AlertasPage (RF-09, RF-10, HU-20/21/23/27/41)', () => {
       registrarAccionCorrectiva: vi.fn(),
     obtenerCicloAtencion: vi.fn().mockResolvedValue([]),
     })
-    render(<AlertasPage />)
+    render(<MemoryRouter><AlertasPage /></MemoryRouter>)
 
     await usuario.click(screen.getByRole('button', { name: /reconocer/i }))
 

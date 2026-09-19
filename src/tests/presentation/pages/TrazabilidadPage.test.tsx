@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { RegistroTrazabilidad } from '@/domain/entities/RegistroTrazabilidad'
@@ -55,6 +56,18 @@ describe('TrazabilidadPage (RF-14, RF-15, HU-26, HU-47)', () => {
   it('ofrece verificar la integridad de la cadena', () => {
     montar()
     expect(screen.getByRole('button', { name: /verificar registros/i })).toBeInTheDocument()
+  })
+
+  it('oculta sellos en vista básica y permite expandir detalles técnicos', async () => {
+    montar()
+    const boton = screen.getByRole('button', { name: /mostrar detalles técnicos/i })
+    expect(boton).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.queryByRole('columnheader', { name: 'Sello anterior' })).not.toBeInTheDocument()
+
+    await userEvent.setup().click(boton)
+
+    expect(screen.getByRole('columnheader', { name: 'Sello anterior' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /ocultar detalles técnicos/i })).toHaveAttribute('aria-expanded', 'true')
   })
 
   it('confirma que los registros están intactos cuando la cadena es íntegra', () => {

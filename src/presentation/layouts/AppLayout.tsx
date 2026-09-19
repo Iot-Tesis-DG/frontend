@@ -28,6 +28,7 @@ import { MODO_DEMO } from '@/infrastructure/demo/modoDemo'
 import { cn } from '@/lib/utils'
 import { AvisoExpiracionSesion } from '../components/AvisoExpiracionSesion'
 import { LanguageSwitcher } from '../components/LanguageSwitcher'
+import { OnboardingTour } from '../components/OnboardingTour'
 
 interface ItemNav {
   ruta: string
@@ -161,6 +162,7 @@ function ContenidoSidebar({
                   <li key={item.ruta}>
                     <NavLink
                       to={item.ruta}
+                      data-tour-route={item.ruta}
                       onClick={alNavegar}
                       className={({ isActive }) =>
                         cn(
@@ -289,6 +291,7 @@ export function AppLayout() {
           <header className="sticky top-0 z-10 flex h-14 items-center gap-3 border-b border-border bg-background/85 px-4 backdrop-blur-sm sm:px-6">
             <DialogPrimitive.Trigger
               aria-label={t('nav.abrirMenu')}
+              data-tour-mobile-menu
               className="-ml-1 rounded-md p-2 text-muted transition-colors hover:bg-cream-200 hover:text-foreground lg:hidden"
             >
               <Menu className="size-5" />
@@ -326,6 +329,7 @@ export function AppLayout() {
           </main>
         </div>
       </DialogPrimitive.Root>
+      <OnboardingTour rol={usuario.rol} userId={usuario.id} />
     </div>
   )
 }

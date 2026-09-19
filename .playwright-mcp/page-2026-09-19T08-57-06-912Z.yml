@@ -1,0 +1,127 @@
+- generic [ref=e82]:
+  - link "Saltar al contenido principal" [ref=e83] [cursor=pointer]:
+    - /url: "#contenido-principal"
+  - complementary [ref=e84]:
+    - generic [ref=e101]:
+      - paragraph [ref=e102]: Cadena de Frío
+      - paragraph [ref=e103]: Monitoreo farmacéutico
+    - navigation "Navegación principal" [ref=e104]:
+      - generic [ref=e105]:
+        - paragraph [ref=e106]: Operación
+        - list "Operación" [ref=e108]:
+          - listitem [ref=e109]:
+            - link "Guía de uso" [ref=e110] [cursor=pointer]:
+              - /url: /guia
+          - listitem [ref=e114]:
+            - link "Monitoreo" [ref=e115] [cursor=pointer]:
+              - /url: /dashboard
+          - listitem [ref=e119]:
+            - link "Historial" [ref=e120] [cursor=pointer]:
+              - /url: /historial
+          - listitem [ref=e126]:
+            - link "Alertas" [ref=e127] [cursor=pointer]:
+              - /url: /alertas
+      - generic [ref=e132]:
+        - paragraph [ref=e133]: Cumplimiento
+        - list "Cumplimiento" [ref=e135]:
+          - listitem [ref=e136]:
+            - link "Trazabilidad" [ref=e137] [cursor=pointer]:
+              - /url: /trazabilidad
+          - listitem [ref=e142]:
+            - link "Checklist BPA" [ref=e143] [cursor=pointer]:
+              - /url: /checklist-bpa
+          - listitem [ref=e149]:
+            - link "Reportes" [ref=e150] [cursor=pointer]:
+              - /url: /reportes
+          - listitem [ref=e155]:
+            - link "Métricas IA" [ref=e156] [cursor=pointer]:
+              - /url: /metricas-ia
+    - generic [ref=e168]:
+      - generic [ref=e169]:
+        - generic [ref=e170]: F
+        - generic [ref=e171]:
+          - paragraph [ref=e172]: farmaceutico@demo.pe
+          - paragraph [ref=e173]: Personal Técnico de Farmacia
+      - button "Cerrar sesión" [ref=e174] [cursor=pointer]
+  - generic [ref=e178]:
+    - banner [ref=e179]:
+      - paragraph [ref=e180]: sábado, 19 de setiembre
+      - generic [ref=e181]:
+        - 'generic "Datos simulados: la aplicación funciona sin conexión al servidor" [ref=e182]': Demostración
+        - group "Idioma" [ref=e185]:
+          - button "ES" [pressed] [ref=e186] [cursor=pointer]
+          - button "EN" [ref=e187] [cursor=pointer]
+    - main "Contenido principal" [ref=e188]:
+      - generic [ref=e190]:
+        - status [ref=e191]: Normal. Temperatura interna 5.3 °C.
+        - alert [ref=e192]
+        - generic [ref=e193]:
+          - generic [ref=e194]:
+            - paragraph [ref=e195]: Operación
+            - heading "Monitoreo en tiempo real" [level=1] [ref=e196]
+            - paragraph [ref=e197]: Estado térmico del refrigerador farmacéutico
+          - generic [ref=e199]:
+            - text: Sin conexión
+            - generic [ref=e202]: · tiempo real
+        - generic [ref=e203]:
+          - generic [ref=e205]:
+            - paragraph [ref=e207]: Temperatura interna
+            - paragraph [ref=e211]:
+              - generic [ref=e212]: "5.3"
+              - generic [ref=e213]: °C
+              - generic [ref=e214]: ▲ 0.2
+            - paragraph [ref=e215]: Desconectado · última lectura 03:56:48 a. m.
+          - generic [ref=e219]:
+            - paragraph [ref=e221]: Temperatura ambiental
+            - paragraph [ref=e227]:
+              - generic [ref=e228]: "23.7"
+              - generic [ref=e229]: °C
+              - generic [ref=e230]: ▲ 0.2
+          - generic [ref=e232]:
+            - paragraph [ref=e234]: Humedad relativa
+            - paragraph [ref=e239]:
+              - generic [ref=e240]: "60"
+              - generic [ref=e241]: "% HR"
+          - generic [ref=e243]:
+            - paragraph [ref=e244]: Estado actual
+            - generic [ref=e246]:
+              - text: Normal
+              - generic [ref=e250]: — Dentro del rango de conservación 2–8 °C
+            - paragraph [ref=e251]: Dentro del rango de conservación 2–8 °C
+            - paragraph [ref=e252]: Clasificado por IA (Random Forest) · Confianza 90% · Modelo demo-3.0.0
+            - paragraph [ref=e253]: "Puerta: Cerrada"
+        - generic [ref=e256]:
+          - generic [ref=e257]:
+            - generic [ref=e258]:
+              - heading "Curva térmica" [level=3] [ref=e259]
+              - paragraph [ref=e260]: últimas 144 lecturas · Rango 2–8 °C
+            - generic [ref=e261]:
+              - paragraph [ref=e262]:
+                - text: "Dispositivo:"
+                - generic [ref=e263]: FARM-01-CDL
+                - generic [ref=e264]: En línea
+              - group "Rango de la curva térmica" [ref=e266]:
+                - button "1 h" [ref=e267]
+                - button "24 h" [pressed] [ref=e268]
+                - button "7 d" [ref=e269]
+          - generic [ref=e270]:
+            - 'img "Gráfica de líneas: temperatura interna y ambiental de las últimas 144 lecturas, con el rango de conservación 2–8 °C marcado" [ref=e271]'
+            - group [ref=e274]:
+              - generic "Ver los datos de la gráfica en una tabla" [ref=e275] [cursor=pointer]
+            - generic [ref=e278]:
+              - generic [ref=e279]:
+                - term [ref=e280]: Mínima
+                - definition [ref=e281]: 4.1 °C
+              - generic [ref=e282]:
+                - term [ref=e283]: Máxima
+                - definition [ref=e284]: 7.4 °C
+              - generic [ref=e285]:
+                - term [ref=e286]: Promedio
+                - definition [ref=e287]: 5.0 °C
+              - generic [ref=e288]:
+                - term [ref=e289]: Fuera de rango
+                - definition [ref=e290]: "0"
+        - paragraph [ref=e291]:
+          - text: "Última actualización: 03:56:48 a. m. ·"
+          - link "Ver alertas" [ref=e292] [cursor=pointer]:
+            - /url: /alertas

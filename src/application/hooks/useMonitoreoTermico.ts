@@ -18,6 +18,7 @@ interface MonitoreoTermico {
   ultima: LecturaTermica | null
   serie: LecturaTermica[]
   sseConectado: boolean
+  estadoHistorial: 'cargando' | 'completo' | 'error'
 }
 
 /**
@@ -28,6 +29,7 @@ interface MonitoreoTermico {
 export function useMonitoreoTermico(horasVentana: number = VENTANA_HORAS_POR_DEFECTO): MonitoreoTermico {
   const [serie, setSerie] = useState<LecturaTermica[]>([])
   const [sseConectado, setSseConectado] = useState(false)
+  const [estadoHistorial, setEstadoHistorial] = useState<MonitoreoTermico['estadoHistorial']>('cargando')
 
   useEffect(() => {
     let activo = true
@@ -35,6 +37,7 @@ export function useMonitoreoTermico(horasVentana: number = VENTANA_HORAS_POR_DEF
     // recién ampliada a 7 días confundiría el resumen y la gráfica mientras
     // llega la respuesta nueva.
     setSerie([])
+    setEstadoHistorial('cargando')
 
     const desde = new Date(Date.now() - horasVentana * 60 * 60 * 1000).toISOString()
 
@@ -55,14 +58,18 @@ export function useMonitoreoTermico(horasVentana: number = VENTANA_HORAS_POR_DEF
             .filter((lectura) => !yaRecibidas.has(lectura.id))
           return [...historial, ...previa].slice(-MAX_LECTURAS_EN_MEMORIA)
         })
+        setEstadoHistorial('completo')
       })
       .catch(() => {
-        /* el dashboard arranca vacío si el backend aún no tiene lecturas */
+        if (activo) setEstadoHistorial('error')
       })
 
     const cerrar = suscribirseLecturas(
       (lectura) => {
-        setSerie((previa) => [...previa, lectura].slice(-MAX_LECTURAS_EN_MEMORIA))
+        setSerie((previa) => {
+          if (previa.some((actual) => actual.id === lectura.id)) return previa
+          return [...previa, lectura].slice(-MAX_LECTURAS_EN_MEMORIA)
+        })
       },
       (conectado) => setSseConectado(conectado),
     )
@@ -73,5 +80,5 @@ export function useMonitoreoTermico(horasVentana: number = VENTANA_HORAS_POR_DEF
     }
   }, [horasVentana])
 
-  return { ultima: serie.at(-1) ?? null, serie, sseConectado }
+  return { ultima: serie.at(-1) ?? null, serie, sseConectado, estadoHistorial }
 }

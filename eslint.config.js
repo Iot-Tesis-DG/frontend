@@ -7,11 +7,11 @@ import tseslint from 'typescript-eslint'
 export default tseslint.config(
   { ignores: ['dist/', 'node_modules/', '.vercel/', 'coverage/'] },
   {
-    files: ['src/**/*.{ts,tsx}'],
+    files: ['src/**/*.{ts,tsx}', 'e2e/**/*.ts', 'playwright.config.ts'],
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     languageOptions: {
       ecmaVersion: 'latest',
-      globals: globals.browser,
+      globals: { ...globals.browser, ...globals.node },
     },
     plugins: {
       'react-hooks': reactHooks,

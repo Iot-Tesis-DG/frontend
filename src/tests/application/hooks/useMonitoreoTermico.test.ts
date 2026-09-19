@@ -124,6 +124,43 @@ describe('useMonitoreoTermico con flujo SSE sostenido', () => {
     expect(result.current.serie.filter((l) => l.id === 'l-5')).toHaveLength(1)
   })
 
+  it('no duplica una lectura reenviada por SSE tras reconexión', async () => {
+    const { result } = renderHook(() => useMonitoreoTermico())
+    await act(async () => {
+      emitir(lectura(5))
+      cambiarEstado(false)
+      cambiarEstado(true)
+      emitir(lectura(5))
+      emitir(lectura(6))
+    })
+
+    expect(result.current.serie.map((l) => l.id)).toEqual(['l-5', 'l-6'])
+  })
+
+  it('distingue historial vacío de fallo de carga sin descartar SSE', async () => {
+    adaptador.restaurar()
+    adaptador = instalarAdaptadorFalso(() => ({ status: 500 }))
+
+    const { result } = renderHook(() => useMonitoreoTermico())
+    expect(result.current.estadoHistorial).toBe('cargando')
+    await act(async () => {
+      await new Promise((resolver) => setTimeout(resolver, 0))
+    })
+    expect(result.current.estadoHistorial).toBe('error')
+    await act(async () => emitir(lectura(7)))
+    expect(result.current.ultima?.id).toBe('l-7')
+    expect(result.current.estadoHistorial).toBe('error')
+  })
+
+  it('marca historial vacío como carga completa', async () => {
+    const { result } = renderHook(() => useMonitoreoTermico())
+    await act(async () => {
+      await new Promise((resolver) => setTimeout(resolver, 0))
+    })
+    expect(result.current.estadoHistorial).toBe('completo')
+    expect(result.current.serie).toEqual([])
+  })
+
   it('mantiene la serie en orden cronológico ascendente para la gráfica', async () => {
     const { result } = renderHook(() => useMonitoreoTermico())
 

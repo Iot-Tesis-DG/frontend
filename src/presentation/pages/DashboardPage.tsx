@@ -10,6 +10,7 @@ import { EChartWrapper } from '@/infrastructure/charts/EChartWrapper'
 import { duracionBreve, hora as formatearHora } from '@/lib/formato'
 import { cn } from '@/lib/utils'
 import { AnuncioRiesgo } from '../components/AnuncioRiesgo'
+import { EstadoCarga, EstadoError } from '../components/EstadoPagina'
 import { PageHeader } from '../components/PageHeader'
 import { RiskBadge } from '../components/RiskBadge'
 import { TablaAlternativa } from '../components/TablaAlternativa'
@@ -271,7 +272,7 @@ function resumenVentana(serie: LecturaTermica[]) {
 export function DashboardPage() {
   const { t } = useTranslation()
   const [horasVentana, setHorasVentana] = useState<number>(24)
-  const { ultima, serie, sseConectado } = useMonitoreoTermico(horasVentana)
+  const { ultima, serie, sseConectado, estadoHistorial } = useMonitoreoTermico(horasVentana)
   const previa = serie.at(-2) ?? null
   const resumen = resumenVentana(serie)
 
@@ -316,7 +317,7 @@ export function DashboardPage() {
             'inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium',
             sseConectado
               ? 'border-glacier-200 bg-glacier-100 text-glacier-700'
-              : 'border-border bg-cream-200 text-muted',
+              : 'border-border bg-cream-200 text-foreground',
           )}
         >
           <span className="relative flex size-2">
@@ -331,11 +332,19 @@ export function DashboardPage() {
             />
           </span>
           {sseConectado ? t('dashboard.conectado') : t('dashboard.desconectado')}
-          <span className="text-faint">· {t('dashboard.tiempoReal')}</span>
+          <span className="text-foreground">· {t('dashboard.tiempoReal')}</span>
         </span>
       </PageHeader>
 
-      {ultima === null ? (
+      {estadoHistorial === 'error' && (
+        <div className="mb-4">
+          <EstadoError mensaje={t('comunes.error')} />
+        </div>
+      )}
+
+      {ultima === null && estadoHistorial === 'cargando' ? (
+        <EstadoCarga />
+      ) : ultima === null && estadoHistorial === 'error' ? null : ultima === null ? (
         <Card className="animate-rise">
           <CardContent className="flex flex-col items-center gap-3 py-20 text-center">
             <span className="flex size-12 items-center justify-center rounded-full bg-cream-200 text-faint">

@@ -8,3 +8,5 @@ dist/
 
 # Cobertura de pruebas
 coverage/
+playwright-report/
+test-results/

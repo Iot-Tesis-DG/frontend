@@ -19,6 +19,7 @@ import {
 import { useAuthStore } from '@/application/stores/authStore'
 import { tienePermiso, type Rol } from '@/domain/value-objects/Rol'
 import { PageHeader } from '../components/PageHeader'
+import { REOPEN_TOUR_EVENT } from '../components/OnboardingTour'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 
 /**
@@ -196,6 +197,14 @@ export function GuiaPage() {
         titulo={t('guia.titulo')}
         descripcion={t('guia.descripcion')}
       />
+
+      <button
+        type="button"
+        onClick={() => window.dispatchEvent(new Event(REOPEN_TOUR_EVENT))}
+        className="mb-6 rounded-md border border-border bg-surface px-4 py-2 text-sm font-medium text-foreground shadow-(--shadow-card) transition-colors hover:bg-cream-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+      >
+        {t('guia.volverAVerRecorrido', { defaultValue: 'Volver a ver recorrido' })}
+      </button>
 
       {/* ── Recorrido de un día ─────────────────────────────── */}
       <Card className="animate-rise">
