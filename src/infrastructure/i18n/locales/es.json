@@ -117,7 +117,14 @@
     "resumenFueraRango": "Fuera de rango",
     "graficaEtiqueta": "Gráfica de líneas: temperatura interna y ambiental de las últimas {{n}} lecturas, con el rango de conservación 2–8 °C marcado",
     "anuncioRiesgo": "{{nivel}}. Temperatura interna {{temperatura}} °C.",
-    "anuncioRiesgoSinTemp": "{{nivel}}. Sin lectura de temperatura interna."
+    "anuncioRiesgoSinTemp": "{{nivel}}. Sin lectura de temperatura interna.",
+    "datoDesactualizado": "Sin lectura nueva hace {{s}} s",
+    "enVivoDesde": "En vivo · {{hora}}",
+    "desconectadoDesde": "Desconectado · última lectura {{hora}}",
+    "rangoVentana": "Rango de la curva térmica",
+    "ventana1h": "1 h",
+    "ventana24h": "24 h",
+    "ventana7d": "7 d"
   },
   "demo": {
     "badge": "Demostración",
@@ -144,7 +151,8 @@
     "puerta": "Puerta",
     "riesgo": "Riesgo",
     "sinResultados": "No hay lecturas para los filtros seleccionados.",
-    "cargando": "Cargando historial…"
+    "cargando": "Cargando historial…",
+    "rangoInvalido": "La fecha \"desde\" no puede ser posterior a la fecha \"hasta\"."
   },
   "alertas": {
     "titulo": "Gestión de alertas",
@@ -169,6 +177,14 @@
     "accionRegistrada": "Acción correctiva registrada.",
     "conflictoEstado": "Esta alerta ya fue actualizada por otra persona. La lista se refrescó con su estado actual.",
     "sinAlertas": "No hay alertas registradas. El refrigerador se mantiene estable.",
+    "verDetalle": "Ver cronología de atención",
+    "cicloAtencion": "Cronología de atención",
+    "eventoCreada": "Alerta generada",
+    "eventoReconocida": "Reconocida",
+    "eventoAtendida": "Acción correctiva registrada",
+    "eventoRectificada": "Justificación rectificada",
+    "responsable": "Responsable",
+    "sinAcciones": "Sin acciones correctivas registradas todavía.",
     "fecha": "Fecha",
     "mensaje": "Mensaje",
     "estado": "Estado",
@@ -204,7 +220,15 @@
     "hashEsperado": "Sello recalculado",
     "hashAlmacenado": "Sello almacenado",
     "posterioresAfectados": "Registros posteriores afectados",
-    "confirmarAislar": "Se marcará este registro como aislado y quedará excluido de la cadena verificable. La acción queda auditada y no se puede deshacer."
+    "confirmarAislar": "Se marcará este registro como aislado y quedará excluido de la cadena verificable. La acción queda auditada y no se puede deshacer.",
+    "verificarSegmento": "Verificar por dispositivo y periodo",
+    "verificarSegmentoBoton": "Verificar segmento",
+    "rangoInvalido": "El rango seleccionado no es válido: \"desde\" no puede ser posterior a \"hasta\".",
+    "segmentoIntegro": "Segmento íntegro",
+    "segmentoRoto": "Alteración detectada en el segmento",
+    "segmentoResumen": "{{n}} bloques verificados para {{device}}.",
+    "integro": "Íntegro",
+    "corrupto": "Corrupto"
   },
   "checklist": {
     "titulo": "Checklist BPA",
@@ -344,7 +368,38 @@
       "reemplazo": "Reemplazo",
       "fin_de_servicio": "Fin de servicio"
     },
-    "darDeBajaA": "Dar de baja el dispositivo {{id}}"
+    "darDeBajaA": "Dar de baja el dispositivo {{id}}",
+    "ubicacion": "Ubicación",
+    "calibracion": "Calibración",
+    "calibracionEstado": {
+      "sin_registrar": "Sin registrar",
+      "vigente": "Vigente",
+      "proxima_a_vencer": "Por vencer",
+      "vencida": "Vencida"
+    },
+    "calibracionVence": "Vence: {{fecha}}",
+    "calibrarA": "Registrar calibración del dispositivo {{id}}",
+    "registrarCalibracion": "Registrar calibración",
+    "fechaCalibracion": "Fecha de calibración",
+    "numeroCertificado": "N.° de certificado",
+    "mesesVigencia": "Meses de vigencia",
+    "observaciones": "Observaciones",
+    "calibracionGuardada": "Calibración registrada correctamente.",
+    "editarInstalacionA": "Editar instalación del dispositivo {{id}}",
+    "editarInstalacion": "Ubicación e instalación",
+    "fechaInstalacion": "Fecha de instalación",
+    "instalacionAviso": "Un cambio de ubicación queda registrado en el historial; la ubicación anterior no se pierde.",
+    "instalacionGuardada": "Instalación actualizada correctamente.",
+    "editarResponsableA": "Editar responsable del dispositivo {{id}}",
+    "editarResponsable": "Responsable de notificaciones",
+    "responsableNombre": "Nombre",
+    "responsableEmail": "Correo electrónico",
+    "responsableTelefono": "Teléfono (SMS, opcional)",
+    "responsableAviso": "Este contacto recibe los avisos de excursión crítica por correo y, si el canal SMS está habilitado, por mensaje de texto.",
+    "responsableGuardado": "Responsable actualizado correctamente.",
+    "verHistorialA": "Ver historial de configuración del dispositivo {{id}}",
+    "historialConfiguracion": "Historial de configuración",
+    "sinHistorial": "Sin cambios registrados todavía."
   },
   "firmware": {
     "titulo": "Firmware y actualizaciones OTA",

@@ -20,6 +20,16 @@ function dispositivo(over: Partial<Dispositivo> = {}): Dispositivo {
     descripcion_baja: null,
     dado_de_baja_en: null,
     reemplaza_a_device_id: null,
+    fecha_ultima_calibracion: null,
+    numero_certificado_calibracion: null,
+    fecha_proxima_calibracion: null,
+    observaciones_calibracion: null,
+    fecha_instalacion: null,
+    instalado_por: null,
+    observaciones_instalacion: null,
+    responsable_nombre: null,
+    responsable_email: null,
+    responsable_telefono: null,
     ...over,
   }
 }
@@ -30,6 +40,10 @@ function montar(dispositivos: Dispositivo[]) {
     cargando: false,
     consultar: vi.fn(),
     darDeBaja: vi.fn(),
+    registrarCalibracion: vi.fn(),
+    actualizarInstalacion: vi.fn(),
+    actualizarResponsable: vi.fn(),
+    obtenerHistorialConfiguracion: vi.fn().mockResolvedValue([]),
   })
   return render(<DispositivosPage />)
 }

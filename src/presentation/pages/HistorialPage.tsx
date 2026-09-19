@@ -1,16 +1,19 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import type { EChartsCoreOption } from 'echarts/core'
 import { DoorClosed, DoorOpen, FilterX, ShieldQuestion, SlidersHorizontal } from 'lucide-react'
 
 import { useHistorial, type FiltrosHistorial } from '@/application/hooks/useHistorial'
+import type { LecturaTermica } from '@/domain/entities/LecturaTermica'
 import { NIVELES_RIESGO } from '@/domain/value-objects/NivelRiesgo'
-import { fechaHora } from '@/lib/formato'
+import { EChartWrapper } from '@/infrastructure/charts/EChartWrapper'
+import { fechaHora, hora as formatearHora } from '@/lib/formato'
 import { rangoPagina } from '@/lib/paginacion'
 import { Paginacion } from '../components/Paginacion'
 import { PageHeader } from '../components/PageHeader'
 import { RiskBadge } from '../components/RiskBadge'
 import { Button } from '../components/ui/button'
-import { Card, CardContent } from '../components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Input, Label, NativeSelect } from '../components/ui/input'
 import {
   Table,
@@ -24,6 +27,85 @@ import {
 
 const FILTROS_INICIALES: FiltrosHistorial = {}
 
+// HU-36 criterio 1: la misma consulta filtrada alimenta tanto la gráfica de
+// ECharts como la tabla, no solo la tabla.
+function construirOpcionHistorial(serie: LecturaTermica[], etiquetas: {
+  interna: string
+  ambiental: string
+}): EChartsCoreOption {
+  const horas = serie.map((l) => formatearHora(l.timestamp))
+  return {
+    textStyle: { fontFamily: 'Instrument Sans, sans-serif', color: '#766458' },
+    grid: { left: 44, right: 16, top: 32, bottom: 28 },
+    tooltip: {
+      trigger: 'axis',
+      backgroundColor: '#ffffff',
+      borderColor: '#e1d7bd',
+      textStyle: { color: '#2f2f3d', fontSize: 12 },
+      valueFormatter: (v: unknown) => (typeof v === 'number' ? `${v.toFixed(1)} °C` : '—'),
+    },
+    legend: {
+      top: 0,
+      right: 0,
+      icon: 'roundRect',
+      itemWidth: 14,
+      itemHeight: 3,
+      textStyle: { color: '#766458', fontSize: 12 },
+    },
+    xAxis: {
+      type: 'category',
+      data: horas,
+      boundaryGap: false,
+      axisLine: { lineStyle: { color: '#e1d7bd' } },
+      axisTick: { show: false },
+      axisLabel: { fontSize: 11, color: '#7d6d5f' },
+    },
+    yAxis: {
+      type: 'value',
+      min: (value: { min: number }) => Math.floor(Math.min(value.min, 0)),
+      max: (value: { max: number }) => Math.ceil(Math.max(value.max, 10)),
+      splitLine: { lineStyle: { color: '#efe9d6' } },
+      axisLabel: { fontSize: 11, color: '#7d6d5f', formatter: '{value} °C' },
+    },
+    series: [
+      {
+        name: etiquetas.interna,
+        type: 'line',
+        smooth: true,
+        symbol: 'none',
+        sampling: 'lttb',
+        large: true,
+        data: serie.map((l) => l.temperatura_interna),
+        lineStyle: { width: 2.5, color: '#4e5366' },
+        itemStyle: { color: '#4e5366' },
+        markArea: {
+          silent: true,
+          itemStyle: { color: 'rgba(78, 83, 102, 0.06)' },
+          data: [[{ yAxis: 2 }, { yAxis: 8 }]],
+        },
+        markLine: {
+          silent: true,
+          symbol: 'none',
+          lineStyle: { color: '#5d3237', type: 'dashed', width: 1 },
+          label: { color: '#5d3237', fontSize: 10, formatter: '{c} °C' },
+          data: [{ yAxis: 2 }, { yAxis: 8 }],
+        },
+      },
+      {
+        name: etiquetas.ambiental,
+        type: 'line',
+        smooth: true,
+        symbol: 'none',
+        sampling: 'lttb',
+        large: true,
+        data: serie.map((l) => l.temperatura_ambiental),
+        lineStyle: { width: 1.5, color: '#7d6d5f', type: 'dashed' },
+        itemStyle: { color: '#7d6d5f' },
+      },
+    ],
+  }
+}
+
 export function HistorialPage() {
   const { t } = useTranslation()
   const { lecturas, cargando, consultar } = useHistorial()
@@ -35,6 +117,10 @@ export function HistorialPage() {
     [lecturas, pagina],
   )
   const [filtros, setFiltros] = useState<FiltrosHistorial>(FILTROS_INICIALES)
+  // HU-36 criterio 3: el rango inválido se bloquea en el FRONTEND antes de
+  // consultar — la validación del backend (422) sigue existiendo para una
+  // llamada directa a la API, pero no es la única barrera.
+  const [errorRango, setErrorRango] = useState<string | null>(null)
 
   const actualizarFiltro = (campo: keyof FiltrosHistorial, valor: string) => {
     setFiltros((previos) => ({ ...previos, [campo]: valor || undefined }))
@@ -42,8 +128,30 @@ export function HistorialPage() {
 
   const limpiar = () => {
     setFiltros(FILTROS_INICIALES)
+    setErrorRango(null)
     void consultar(FILTROS_INICIALES)
   }
+
+  const aplicarFiltros = () => {
+    if (filtros.desde && filtros.hasta && new Date(filtros.desde) > new Date(filtros.hasta)) {
+      setErrorRango(t('historial.rangoInvalido'))
+      return
+    }
+    setErrorRango(null)
+    void consultar(filtros)
+  }
+
+  // HU-36 criterio 1: la gráfica necesita orden cronológico ascendente; el
+  // backend devuelve el historial en orden descendente (más reciente primero).
+  const serieGrafica = useMemo(() => [...lecturas].reverse(), [lecturas])
+  const opcionHistorial = useMemo(
+    () =>
+      construirOpcionHistorial(serieGrafica, {
+        interna: t('dashboard.tempInterna'),
+        ambiental: t('dashboard.tempAmbiental'),
+      }),
+    [serieGrafica, t],
+  )
 
   return (
     <div>
@@ -64,7 +172,7 @@ export function HistorialPage() {
             className="grid grid-cols-1 items-end gap-3 min-[480px]:grid-cols-2 lg:grid-cols-5"
             onSubmit={(e) => {
               e.preventDefault()
-              void consultar(filtros)
+              aplicarFiltros()
             }}
           >
             <div>
@@ -118,11 +226,33 @@ export function HistorialPage() {
               </Button>
             </div>
           </form>
+          {errorRango && (
+            <p role="alert" className="mt-3 rounded-(--radius-field) bg-clay-100 px-3 py-2 text-[13px] text-clay-700">
+              {errorRango}
+            </p>
+          )}
         </CardContent>
       </Card>
 
+      {/* ── HU-36 criterio 1: la misma consulta alimenta la gráfica ──── */}
+      {!cargando && lecturas.length > 0 && (
+        <Card className="mb-5 animate-rise" style={{ animationDelay: '30ms' }}>
+          <CardHeader>
+            <CardTitle>{t('dashboard.curvaTermica')}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <EChartWrapper
+              option={opcionHistorial}
+              height="280px"
+              ariaLabel={t('dashboard.graficaEtiqueta', { n: serieGrafica.length })}
+              ariaDescribedBy="historial-datos-tabla"
+            />
+          </CardContent>
+        </Card>
+      )}
+
       {/* ── Tabla ───────────────────────────────────────────── */}
-      <div className="animate-rise" style={{ animationDelay: '60ms' }}>
+      <div id="historial-datos-tabla" className="animate-rise" style={{ animationDelay: '60ms' }}>
         <Table titulo={t('historial.titulo')} cargando={cargando}>
           <TableHeader>
             <TableRow>

@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { BellOff, CheckCheck, ClipboardPen } from 'lucide-react'
+import { BellOff, CheckCheck, ClipboardPen, History } from 'lucide-react'
 
 import { useAlertas, type FiltroEstado } from '@/application/hooks/useAlertas'
 import { useAuthStore } from '@/application/stores/authStore'
 import { tienePermiso } from '@/domain/value-objects/Rol'
 import type { EstadoAlerta } from '@/domain/value-objects/EstadoAlerta'
-import type { AlertaTermica } from '@/domain/entities/AlertaTermica'
+import type { AccionCorrectiva, AlertaTermica } from '@/domain/entities/AlertaTermica'
 import { fechaHora } from '@/lib/formato'
 import { cn } from '@/lib/utils'
 import { rangoPagina } from '@/lib/paginacion'
@@ -44,8 +44,15 @@ const VARIANTE_POR_ESTADO: Record<EstadoAlerta, 'outline' | 'warn' | 'ok'> = {
 export function AlertasPage() {
   const { t } = useTranslation()
   const usuario = useAuthStore((s) => s.usuario)
-  const { alertas, cargando, filtro, setFiltro, reconocerAlerta, registrarAccionCorrectiva } =
-    useAlertas()
+  const {
+    alertas,
+    cargando,
+    filtro,
+    setFiltro,
+    reconocerAlerta,
+    registrarAccionCorrectiva,
+    obtenerCicloAtencion,
+  } = useAlertas()
   const [pagina, setPagina] = useState(1)
   // Solo se pinta la página visible: estas listas crecen sin techo.
   const visibles = useMemo(() => alertas.slice(...rangoPagina(pagina)), [alertas, pagina])
@@ -58,6 +65,21 @@ export function AlertasPage() {
   // la lista y este click (otro usuario la atendió primero).
   const [conflictoAccion, setConflictoAccion] = useState(false)
   const [conflictoReconocer, setConflictoReconocer] = useState<string | null>(null)
+
+  // HU-23 criterio 4: cronología de atención de la alerta seleccionada.
+  const [alertaDetalle, setAlertaDetalle] = useState<AlertaTermica | null>(null)
+  const [ciclo, setCiclo] = useState<AccionCorrectiva[]>([])
+  const [cargandoCiclo, setCargandoCiclo] = useState(false)
+
+  const verDetalle = async (alerta: AlertaTermica) => {
+    setAlertaDetalle(alerta)
+    setCargandoCiclo(true)
+    try {
+      setCiclo(await obtenerCicloAtencion(alerta.id))
+    } finally {
+      setCargandoCiclo(false)
+    }
+  }
 
   // HU-23/HU-41: reconocer (PENDIENTE -> RECONOCIDA) es exclusivo del
   // farmacéutico, igual que ya exige `require_roles(Rol.FARMACEUTICO)` en el
@@ -188,6 +210,16 @@ export function AlertasPage() {
                           {t('alertas.accionCorrectiva')}
                         </Button>
                       )}
+                      {alerta.estado !== 'pendiente' && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => void verDetalle(alerta)}
+                          title={t('alertas.verDetalle')}
+                        >
+                          <History />
+                        </Button>
+                      )}
                     </div>
                     {conflictoReconocer === alerta.id && (
                       <p role="alert" className="text-xs text-clay-700">
@@ -265,6 +297,53 @@ export function AlertasPage() {
                 {guardandoAccion ? t('alertas.guardando') : t('alertas.guardarAccion')}
               </Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── HU-23 criterio 4: cronología de atención (solo lectura) ──────── */}
+      <Dialog open={alertaDetalle !== null} onOpenChange={(abierto) => !abierto && setAlertaDetalle(null)}>
+        <DialogContent>
+          <DialogTitle>{t('alertas.cicloAtencion')}</DialogTitle>
+          <DialogDescription>{alertaDetalle?.mensaje}</DialogDescription>
+          <ol className="mt-3 max-h-96 space-y-3 overflow-y-auto border-l-2 border-border pl-4">
+            {alertaDetalle?.created_at && (
+              <li>
+                <p className="text-[13px] font-medium">{t('alertas.eventoCreada')}</p>
+                <p className="nums text-xs text-faint">{fechaHora(alertaDetalle.created_at)}</p>
+              </li>
+            )}
+            {alertaDetalle?.reconocida_en && (
+              <li>
+                <p className="text-[13px] font-medium">{t('alertas.eventoReconocida')}</p>
+                <p className="nums text-xs text-faint">{fechaHora(alertaDetalle.reconocida_en)}</p>
+                {alertaDetalle.revisada_por && (
+                  <p className="nums text-xs text-muted">{t('alertas.responsable')}: {alertaDetalle.revisada_por}</p>
+                )}
+              </li>
+            )}
+            {cargandoCiclo ? (
+              <li className="text-sm text-muted">{t('app.cargando')}</li>
+            ) : (
+              ciclo.map((accion) => (
+                <li key={accion.id}>
+                  <p className="text-[13px] font-medium">
+                    {accion.corrige_accion_id ? t('alertas.eventoRectificada') : t('alertas.eventoAtendida')}
+                  </p>
+                  <p className="nums text-xs text-faint">{fechaHora(accion.created_at)}</p>
+                  <p className="nums text-xs text-muted">{t('alertas.responsable')}: {accion.usuario_id}</p>
+                  <p className="mt-1 text-[13px] text-foreground">{accion.descripcion}</p>
+                </li>
+              ))
+            )}
+            {!cargandoCiclo && ciclo.length === 0 && (
+              <li className="text-sm text-muted">{t('alertas.sinAcciones')}</li>
+            )}
+          </ol>
+          <div className="mt-4 flex justify-end">
+            <Button variant="ghost" onClick={() => setAlertaDetalle(null)}>
+              {t('comunes.cerrar')}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

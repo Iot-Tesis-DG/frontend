@@ -33,6 +33,10 @@ function montar(over: Record<string, unknown> = {}) {
     verificarIntegridad: vi.fn(),
     estadoCadena: { cadena_comprometida: false },
     aislarCorrupcion: vi.fn(),
+    verificacionSegmento: null,
+    verificandoSegmento: false,
+    errorSegmento: null,
+    verificarPorDispositivo: vi.fn(),
     ...over,
   })
   render(<TrazabilidadPage />)

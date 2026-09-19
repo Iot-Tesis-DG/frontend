@@ -231,6 +231,7 @@ function generarEstadoInicial(): EstadoDemo {
       descripcion:
         'Se verificó el cierre de la puerta, se reorganizaron los productos y se confirmó el retorno al rango 2–8 °C en menos de 30 minutos.',
       created_at: new Date(new Date(a.created_at ?? 0).getTime() + 25 * 60 * 1000).toISOString(),
+      corrige_accion_id: null,
     }))
 
   // Trazabilidad: cadena de sellos encadenados (hash previo → hash actual).

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import axios from 'axios'
 
-import type { AlertaTermica } from '@/domain/entities/AlertaTermica'
+import type { AccionCorrectiva, AlertaTermica } from '@/domain/entities/AlertaTermica'
 import type { EstadoAlerta } from '@/domain/value-objects/EstadoAlerta'
 import { apiClient } from '@/infrastructure/api/apiClient'
 
@@ -74,5 +74,22 @@ export function useAlertas() {
     [consultar, filtro],
   )
 
-  return { alertas, cargando, filtro, setFiltro, reconocerAlerta, registrarAccionCorrectiva }
+  // HU-23 criterio 4: cronología de atención de una alerta (reconocimiento +
+  // acciones correctivas + rectificaciones, HU-28), de solo lectura.
+  const obtenerCicloAtencion = useCallback(async (alertaId: string): Promise<AccionCorrectiva[]> => {
+    const { data } = await apiClient.get<AccionCorrectiva[]>(
+      `/api/alertas/${alertaId}/acciones-correctivas`,
+    )
+    return data
+  }, [])
+
+  return {
+    alertas,
+    cargando,
+    filtro,
+    setFiltro,
+    reconocerAlerta,
+    registrarAccionCorrectiva,
+    obtenerCicloAtencion,
+  }
 }

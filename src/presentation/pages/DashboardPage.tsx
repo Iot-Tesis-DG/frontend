@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import type { EChartsCoreOption } from 'echarts/core'
@@ -21,6 +21,19 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../co
 // alertas del backend (que sigue siendo puramente térmica, HU-21).
 const UMBRAL_PUERTA_ABIERTA_SEGUNDOS = 120
 
+// HU-33 criterio 2: a partir de este umbral sin una lectura nueva, el dato
+// mostrado se marca como desactualizado — no basta con "hay un valor", tiene
+// que seguir siendo reciente. El doble del intervalo de muestreo (30 s) deja
+// margen a la latencia normal de red sin disparar falsos positivos.
+const UMBRAL_FRESCURA_SEGUNDOS = 90
+
+// HU-31 criterio 4: opciones de rango para la curva térmica del dashboard.
+// 24 h es el valor por defecto exigido por el criterio; las demás son la
+// forma de "ampliar o modificar el rango" que pide el mismo criterio sin
+// duplicar el panel de filtros completo de HU-36 (ese vive en Historial,
+// sobre datos ya cerrados — este es el propio monitoreo en vivo).
+const OPCIONES_VENTANA_HORAS = [1, 24, 24 * 7] as const
+
 function TarjetaMetrica({
   etiqueta,
   valor,
@@ -34,6 +47,17 @@ function TarjetaMetrica({
   // que el sensor falló, para no confundirlo con "todavía no llegó nada".
   fallaSensor = false,
   textoFallaSensor,
+  // HU-33 criterio 2: dato presente pero desactualizado — distinto de
+  // `fallaSensor` (dato ausente porque el sensor falló). Se atenúa la
+  // tarjeta y se avisa, en vez de mostrar un número viejo como si fuera
+  // vigente.
+  desactualizado = false,
+  textoDesactualizado,
+  // HU-32 criterio 4: indicador "En vivo/Tiempo real" JUNTO AL VALOR (no solo
+  // en la cabecera de la página), con el timestamp de la última
+  // actualización, para que no haya ambigüedad entre una lectura activa y
+  // una desconectada/congelada. Solo se pasa en la tarjeta principal.
+  enVivo,
 }: {
   etiqueta: string
   valor: string
@@ -44,13 +68,17 @@ function TarjetaMetrica({
   destacada?: boolean
   fallaSensor?: boolean
   textoFallaSensor?: string
+  desactualizado?: boolean
+  textoDesactualizado?: string
+  enVivo?: { conectado: boolean; texto: string }
 }) {
   return (
     <Card
       className={cn(
         'card-lift animate-rise',
-        destacada && !fallaSensor && 'border-pine-200 bg-primary-tint/50',
+        destacada && !fallaSensor && !desactualizado && 'border-pine-200 bg-primary-tint/50',
         fallaSensor && 'border-clay-200 bg-clay-50/40',
+        !fallaSensor && desactualizado && 'opacity-60',
       )}
       style={{ animationDelay: `${retraso}ms` }}
     >
@@ -60,14 +88,18 @@ function TarjetaMetrica({
           <span
             className={cn(
               'flex size-7 items-center justify-center rounded-md',
-              fallaSensor
+              fallaSensor || desactualizado
                 ? 'bg-clay-100 text-clay-600'
                 : destacada
                   ? 'bg-pine-100 text-pine-600'
                   : 'bg-cream-100 text-faint',
             )}
           >
-            {fallaSensor ? <AlertTriangle className="size-4" /> : <Icono className="size-4" />}
+            {fallaSensor || desactualizado ? (
+              <AlertTriangle className="size-4" />
+            ) : (
+              <Icono className="size-4" />
+            )}
           </span>
         </div>
         {fallaSensor ? (
@@ -75,22 +107,45 @@ function TarjetaMetrica({
             {textoFallaSensor}
           </p>
         ) : (
-          <p className="mt-2 flex items-baseline gap-1">
-            <span className="nums text-[32px] font-semibold leading-none tracking-tight">
-              {valor}
-            </span>
-            <span className="text-sm text-muted">{unidad}</span>
-            {delta != null && Math.abs(delta) >= 0.05 && (
-              <span
-                className={cn(
-                  'nums ml-auto text-xs font-medium',
-                  delta > 0 ? 'text-honey-600' : 'text-pine-600',
-                )}
-              >
-                {delta > 0 ? '▲' : '▼'} {Math.abs(delta).toFixed(1)}
+          <>
+            <p className="mt-2 flex items-baseline gap-1">
+              <span className="nums text-[32px] font-semibold leading-none tracking-tight">
+                {valor}
               </span>
+              <span className="text-sm text-muted">{unidad}</span>
+              {delta != null && Math.abs(delta) >= 0.05 && (
+                <span
+                  className={cn(
+                    'nums ml-auto text-xs font-medium',
+                    delta > 0 ? 'text-honey-600' : 'text-pine-600',
+                  )}
+                >
+                  {delta > 0 ? '▲' : '▼'} {Math.abs(delta).toFixed(1)}
+                </span>
+              )}
+            </p>
+            {desactualizado && (
+              <p className="mt-1 text-xs font-medium leading-snug text-clay-700">
+                {textoDesactualizado}
+              </p>
             )}
-          </p>
+            {enVivo && !desactualizado && (
+              <p className="mt-1 flex items-center gap-1.5 text-xs text-muted">
+                <span className="relative flex size-1.5">
+                  {enVivo.conectado && (
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-glacier-600 opacity-60" />
+                  )}
+                  <span
+                    className={cn(
+                      'relative inline-flex size-1.5 rounded-full',
+                      enVivo.conectado ? 'bg-glacier-600' : 'bg-faint',
+                    )}
+                  />
+                </span>
+                {enVivo.texto}
+              </p>
+            )}
+          </>
         )}
       </CardContent>
     </Card>
@@ -151,6 +206,12 @@ function construirOpcionCurva(serie: LecturaTermica[], etiquetas: {
         type: 'line',
         smooth: true,
         symbol: 'none',
+        // HU-31 criterio 3: con la ventana ampliada a días, miles de puntos
+        // continuos se muestrean automáticamente (LTTB conserva la forma
+        // real de la tendencia, a diferencia de un promedio simple) para que
+        // la interfaz siga fluida sin perder picos ni caídas relevantes.
+        sampling: 'lttb',
+        large: true,
         data: serie.map((l) => l.temperatura_interna),
         lineStyle: { width: 2.5, color: '#4e5366' },
         itemStyle: { color: '#4e5366' },
@@ -182,6 +243,8 @@ function construirOpcionCurva(serie: LecturaTermica[], etiquetas: {
         type: 'line',
         smooth: true,
         symbol: 'none',
+        sampling: 'lttb',
+        large: true,
         data: serie.map((l) => l.temperatura_ambiental),
         lineStyle: { width: 1.5, color: '#7d6d5f', type: 'dashed' },
         itemStyle: { color: '#7d6d5f' },
@@ -207,9 +270,23 @@ function resumenVentana(serie: LecturaTermica[]) {
 
 export function DashboardPage() {
   const { t } = useTranslation()
-  const { ultima, serie, sseConectado } = useMonitoreoTermico()
+  const [horasVentana, setHorasVentana] = useState<number>(24)
+  const { ultima, serie, sseConectado } = useMonitoreoTermico(horasVentana)
   const previa = serie.at(-2) ?? null
   const resumen = resumenVentana(serie)
+
+  // HU-32 criterio 4 / HU-33 criterio 2: si "hace cuánto" solo se recalculara
+  // al recibir una lectura nueva, se congelaría hasta la siguiente — este
+  // tick lo mantiene avanzando aunque el dato no cambie, que es justo lo que
+  // distingue una lectura vigente de una congelada/desconectada.
+  const [ahora, setAhora] = useState(() => Date.now())
+  useEffect(() => {
+    const id = setInterval(() => setAhora(Date.now()), 1000)
+    return () => clearInterval(id)
+  }, [])
+
+  const segundosDesdeUltima = ultima ? Math.max(0, Math.floor((ahora - new Date(ultima.timestamp).getTime()) / 1000)) : null
+  const datoDesactualizado = segundosDesdeUltima != null && segundosDesdeUltima >= UMBRAL_FRESCURA_SEGUNDOS
 
   const deltaDe = (
     actual: number | null | undefined,
@@ -281,6 +358,14 @@ export function DashboardPage() {
               destacada
               fallaSensor={fallaSensor(ultima, 'temperatura_interna')}
               textoFallaSensor={t('dashboard.fallaSensor')}
+              desactualizado={datoDesactualizado}
+              textoDesactualizado={t('dashboard.datoDesactualizado', { s: segundosDesdeUltima })}
+              enVivo={{
+                conectado: sseConectado,
+                texto: sseConectado
+                  ? t('dashboard.enVivoDesde', { hora: formatearHora(ultima.timestamp) })
+                  : t('dashboard.desconectadoDesde', { hora: formatearHora(ultima.timestamp) }),
+              }}
             />
             <TarjetaMetrica
               etiqueta={t('dashboard.tempAmbiental')}
@@ -291,6 +376,8 @@ export function DashboardPage() {
               retraso={60}
               fallaSensor={fallaSensor(ultima, 'temperatura_ambiental')}
               textoFallaSensor={t('dashboard.fallaSensor')}
+              desactualizado={datoDesactualizado}
+              textoDesactualizado={t('dashboard.datoDesactualizado', { s: segundosDesdeUltima })}
             />
             <TarjetaMetrica
               etiqueta={t('dashboard.humedad')}
@@ -300,6 +387,8 @@ export function DashboardPage() {
               textoFallaSensor={t('dashboard.fallaSensor')}
               icono={Droplets}
               retraso={120}
+              desactualizado={datoDesactualizado}
+              textoDesactualizado={t('dashboard.datoDesactualizado', { s: segundosDesdeUltima })}
             />
             <Card className="card-lift animate-rise" style={{ animationDelay: '180ms' }}>
               <CardContent className="p-5">
@@ -410,22 +499,48 @@ export function DashboardPage() {
                   {t('dashboard.rangoConservacion')}
                 </CardDescription>
               </div>
-              {/* RF-18: el dashboard muestra el estado de conectividad del
-                  dispositivo. Es distinto del indicador SSE de la cabecera,
-                  que refleja la salud del stream del navegador, no la del nodo. */}
-              <p className="flex items-center gap-2 text-xs text-faint">
-                {t('dashboard.dispositivo')}:{' '}
-                <span className="nums text-ink-700">{ultima.device_id}</span>
-                <Badge
-                  variant={ultima.estado_conectividad === 'online' ? 'ok' : 'neutral'}
-                  dot
-                  data-testid="conectividad-dispositivo"
-                >
-                  {ultima.estado_conectividad === 'online'
-                    ? t('dashboard.dispositivoOnline')
-                    : t('dashboard.dispositivoOffline')}
-                </Badge>
-              </p>
+              <div className="flex flex-col items-end gap-2">
+                {/* RF-18: el dashboard muestra el estado de conectividad del
+                    dispositivo. Es distinto del indicador SSE de la cabecera,
+                    que refleja la salud del stream del navegador, no la del nodo. */}
+                <p className="flex items-center gap-2 text-xs text-faint">
+                  {t('dashboard.dispositivo')}:{' '}
+                  <span className="nums text-ink-700">{ultima.device_id}</span>
+                  <Badge
+                    variant={ultima.estado_conectividad === 'online' ? 'ok' : 'neutral'}
+                    dot
+                    data-testid="conectividad-dispositivo"
+                  >
+                    {ultima.estado_conectividad === 'online'
+                      ? t('dashboard.dispositivoOnline')
+                      : t('dashboard.dispositivoOffline')}
+                  </Badge>
+                </p>
+                {/* HU-31 criterio 4: ventana de 24 h por defecto, con opción
+                    de ampliar o acotar sin salir del dashboard. */}
+                <div role="group" aria-label={t('dashboard.rangoVentana')} className="flex gap-1">
+                  {OPCIONES_VENTANA_HORAS.map((horas) => (
+                    <button
+                      key={horas}
+                      type="button"
+                      onClick={() => setHorasVentana(horas)}
+                      aria-pressed={horasVentana === horas}
+                      className={cn(
+                        'rounded-(--radius-field) px-2 py-1 text-xs font-medium transition-colors',
+                        horasVentana === horas
+                          ? 'bg-pine-100 text-pine-700'
+                          : 'text-faint hover:bg-cream-200 hover:text-muted',
+                      )}
+                    >
+                      {horas === 1
+                        ? t('dashboard.ventana1h')
+                        : horas === 24
+                          ? t('dashboard.ventana24h')
+                          : t('dashboard.ventana7d')}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
               <EChartWrapper

@@ -45,6 +45,7 @@ function montar(alertas: AlertaTermica[]) {
     setFiltro: vi.fn(),
     reconocerAlerta,
     registrarAccionCorrectiva: vi.fn(),
+    obtenerCicloAtencion: vi.fn().mockResolvedValue([]),
   })
   render(<AlertasPage />)
   return reconocerAlerta
@@ -132,6 +133,7 @@ describe('AlertasPage (RF-09, RF-10, HU-20/21/23/27/41)', () => {
       setFiltro: vi.fn(),
       reconocerAlerta,
       registrarAccionCorrectiva: vi.fn(),
+    obtenerCicloAtencion: vi.fn().mockResolvedValue([]),
     })
     render(<AlertasPage />)
 

@@ -29,3 +29,22 @@ export interface VerificacionIntegridad {
 export interface EstadoCadena {
   cadena_comprometida: boolean
 }
+
+// HU-37: verificación de integridad acotada a un dispositivo y un periodo —
+// distinta de VerificacionIntegridad (cadena completa, HU-26).
+export interface EstadoRegistroSegmento {
+  id: string
+  tipo_evento: string
+  timestamp: string
+  integro: boolean
+}
+
+export interface VerificacionSegmento {
+  device_id: string
+  desde: string
+  hasta: string
+  integra: boolean
+  total_bloques_verificados: number
+  registros_del_dispositivo: EstadoRegistroSegmento[]
+  primer_registro_inconsistente: string | null
+}
