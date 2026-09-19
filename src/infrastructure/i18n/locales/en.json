@@ -117,7 +117,14 @@
     "resumenFueraRango": "Out of range",
     "graficaEtiqueta": "Line chart: internal and ambient temperature for the last {{n}} readings, with the 2–8 °C storage range marked",
     "anuncioRiesgo": "{{nivel}}. Internal temperature {{temperatura}} °C.",
-    "anuncioRiesgoSinTemp": "{{nivel}}. No internal temperature reading."
+    "anuncioRiesgoSinTemp": "{{nivel}}. No internal temperature reading.",
+    "datoDesactualizado": "No new reading for {{s}}s",
+    "enVivoDesde": "Live · {{hora}}",
+    "desconectadoDesde": "Disconnected · last reading {{hora}}",
+    "rangoVentana": "Thermal curve range",
+    "ventana1h": "1 h",
+    "ventana24h": "24 h",
+    "ventana7d": "7 d"
   },
   "demo": {
     "badge": "Demo",
@@ -144,7 +151,8 @@
     "puerta": "Door",
     "riesgo": "Risk",
     "sinResultados": "No readings match the selected filters.",
-    "cargando": "Loading history…"
+    "cargando": "Loading history…",
+    "rangoInvalido": "The \"from\" date cannot be later than the \"to\" date."
   },
   "alertas": {
     "titulo": "Alert management",
@@ -169,6 +177,14 @@
     "accionRegistrada": "Corrective action logged.",
     "conflictoEstado": "This alert was already updated by someone else. The list was refreshed with its current status.",
     "sinAlertas": "No alerts on record. The refrigerator remains stable.",
+    "verDetalle": "View attention timeline",
+    "cicloAtencion": "Attention timeline",
+    "eventoCreada": "Alert generated",
+    "eventoReconocida": "Acknowledged",
+    "eventoAtendida": "Corrective action logged",
+    "eventoRectificada": "Justification amended",
+    "responsable": "Responsible",
+    "sinAcciones": "No corrective actions logged yet.",
     "fecha": "Date",
     "mensaje": "Message",
     "estado": "Status",
@@ -204,7 +220,15 @@
     "hashEsperado": "Recomputed seal",
     "hashAlmacenado": "Stored seal",
     "posterioresAfectados": "Subsequent records affected",
-    "confirmarAislar": "This record will be marked as isolated and excluded from the verifiable chain. The action is audited and cannot be undone."
+    "confirmarAislar": "This record will be marked as isolated and excluded from the verifiable chain. The action is audited and cannot be undone.",
+    "verificarSegmento": "Verify by device and period",
+    "verificarSegmentoBoton": "Verify segment",
+    "rangoInvalido": "The selected range is invalid: \"from\" cannot be later than \"to\".",
+    "segmentoIntegro": "Segment intact",
+    "segmentoRoto": "Tampering detected in the segment",
+    "segmentoResumen": "{{n}} blocks verified for {{device}}.",
+    "integro": "Intact",
+    "corrupto": "Corrupted"
   },
   "checklist": {
     "titulo": "GSP Checklist",
@@ -344,7 +368,38 @@
       "reemplazo": "Replacement",
       "fin_de_servicio": "End of service"
     },
-    "darDeBajaA": "Decommission device {{id}}"
+    "darDeBajaA": "Decommission device {{id}}",
+    "ubicacion": "Location",
+    "calibracion": "Calibration",
+    "calibracionEstado": {
+      "sin_registrar": "Not registered",
+      "vigente": "Current",
+      "proxima_a_vencer": "Due soon",
+      "vencida": "Expired"
+    },
+    "calibracionVence": "Expires: {{fecha}}",
+    "calibrarA": "Register calibration for device {{id}}",
+    "registrarCalibracion": "Register calibration",
+    "fechaCalibracion": "Calibration date",
+    "numeroCertificado": "Certificate no.",
+    "mesesVigencia": "Validity (months)",
+    "observaciones": "Notes",
+    "calibracionGuardada": "Calibration registered successfully.",
+    "editarInstalacionA": "Edit installation for device {{id}}",
+    "editarInstalacion": "Location and installation",
+    "fechaInstalacion": "Installation date",
+    "instalacionAviso": "A location change is recorded in the history; the previous location is not lost.",
+    "instalacionGuardada": "Installation updated successfully.",
+    "editarResponsableA": "Edit responsible contact for device {{id}}",
+    "editarResponsable": "Notification contact",
+    "responsableNombre": "Name",
+    "responsableEmail": "Email",
+    "responsableTelefono": "Phone (SMS, optional)",
+    "responsableAviso": "This contact receives critical excursion alerts by email and, if the SMS channel is enabled, by text message.",
+    "responsableGuardado": "Contact updated successfully.",
+    "verHistorialA": "View configuration history for device {{id}}",
+    "historialConfiguracion": "Configuration history",
+    "sinHistorial": "No changes recorded yet."
   },
   "firmware": {
     "titulo": "Firmware & OTA updates",

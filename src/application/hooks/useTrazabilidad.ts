@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
+import axios from 'axios'
 
 import type {
   EstadoCadena,
   RegistroTrazabilidad,
   VerificacionIntegridad,
+  VerificacionSegmento,
 } from '@/domain/entities/RegistroTrazabilidad'
 import { apiClient } from '@/infrastructure/api/apiClient'
 
@@ -50,6 +52,38 @@ export function useTrazabilidad() {
     }
   }, [consultarEstadoCadena])
 
+  // HU-37: verificación acotada a un dispositivo y periodo — endpoint
+  // distinto de /verificar (cadena completa). `null` en `error` cuando no se
+  // ha intentado o la verificación fue exitosa; un string cuando falló, para
+  // distinguir "sin ejecutar todavía" de "se ejecutó y dio error".
+  const [verificacionSegmento, setVerificacionSegmento] = useState<VerificacionSegmento | null>(null)
+  const [verificandoSegmento, setVerificandoSegmento] = useState(false)
+  const [errorSegmento, setErrorSegmento] = useState<string | null>(null)
+
+  const verificarPorDispositivo = useCallback(
+    async (deviceId: string, desde: string, hasta: string) => {
+      setVerificandoSegmento(true)
+      setErrorSegmento(null)
+      try {
+        const { data } = await apiClient.get<VerificacionSegmento>(
+          '/api/trazabilidad/verificar-dispositivo',
+          { params: { device_id: deviceId, desde, hasta } },
+        )
+        setVerificacionSegmento(data)
+      } catch (error) {
+        setVerificacionSegmento(null)
+        setErrorSegmento(
+          axios.isAxiosError(error) && error.response?.status === 422
+            ? 'rango_invalido'
+            : 'error',
+        )
+      } finally {
+        setVerificandoSegmento(false)
+      }
+    },
+    [],
+  )
+
   const aislarCorrupcion = useCallback(
     async (registroId: string): Promise<'ok' | 'error'> => {
       try {
@@ -72,5 +106,9 @@ export function useTrazabilidad() {
     verificarIntegridad,
     estadoCadena,
     aislarCorrupcion,
+    verificacionSegmento,
+    verificandoSegmento,
+    errorSegmento,
+    verificarPorDispositivo,
   }
 }

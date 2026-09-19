@@ -6,7 +6,7 @@ import type { LecturaTermica } from '@/domain/entities/LecturaTermica'
 const suscribirseLecturas = vi.hoisted(() => vi.fn())
 vi.mock('@/infrastructure/sse/sseClient', () => ({ suscribirseLecturas }))
 
-import { useMonitoreoTermico } from '@/application/hooks/useMonitoreoTermico'
+import { MAX_LECTURAS_EN_MEMORIA, useMonitoreoTermico } from '@/application/hooks/useMonitoreoTermico'
 import { instalarAdaptadorFalso } from '@/tests/ayudas'
 
 /**
@@ -62,14 +62,15 @@ describe('useMonitoreoTermico con flujo SSE sostenido', () => {
 
   it('acota la serie en memoria por muchas lecturas que lleguen', async () => {
     const { result } = renderHook(() => useMonitoreoTermico())
+    const total = MAX_LECTURAS_EN_MEMORIA + 50
 
     await act(async () => {
-      for (let i = 0; i < 500; i++) emitir(lectura(i))
+      for (let i = 0; i < total; i++) emitir(lectura(i))
     })
 
-    // Sin tope, una jornada de 8 horas acumularía miles de puntos: la gráfica
-    // se vuelve ilegible y cada repintado recorre el array entero.
-    expect(result.current.serie.length).toBeLessThanOrEqual(60)
+    // Sin tope, un rango ampliado a semanas acumularía sin fin: la gráfica se
+    // vuelve ilegible y cada repintado recorre el array entero.
+    expect(result.current.serie.length).toBeLessThanOrEqual(MAX_LECTURAS_EN_MEMORIA)
   })
 
   it('conserva las lecturas más recientes, no las primeras', async () => {
@@ -78,14 +79,15 @@ describe('useMonitoreoTermico con flujo SSE sostenido', () => {
       await new Promise((resolver) => setTimeout(resolver, 0))
     })
 
+    const total = MAX_LECTURAS_EN_MEMORIA + 50
     await act(async () => {
-      for (let i = 0; i < 500; i++) emitir(lectura(i))
+      for (let i = 0; i < total; i++) emitir(lectura(i))
     })
 
     // El descarte debe caer por el extremo antiguo: lo que interesa del
     // monitoreo en vivo es el ahora.
-    expect(result.current.ultima?.id).toBe('l-499')
-    expect(result.current.serie[0].id).toBe('l-440')
+    expect(result.current.ultima?.id).toBe(`l-${total - 1}`)
+    expect(result.current.serie[0].id).toBe(`l-${total - MAX_LECTURAS_EN_MEMORIA}`)
   })
 
   it('no descarta una lectura en vivo que se adelante al historial', async () => {

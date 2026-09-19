@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { AlertOctagon, Link2, ShieldAlert, ShieldCheck } from 'lucide-react'
+import { AlertOctagon, Link2, ScanSearch, ShieldAlert, ShieldCheck } from 'lucide-react'
 
 import { useTrazabilidad } from '@/application/hooks/useTrazabilidad'
 import { useAuthStore } from '@/application/stores/authStore'
@@ -13,7 +13,7 @@ import { Badge } from '../components/ui/badge'
 import { Button } from '../components/ui/button'
 import { Card, CardContent } from '../components/ui/card'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '../components/ui/dialog'
-import { Label, NativeSelect } from '../components/ui/input'
+import { Input, Label, NativeSelect } from '../components/ui/input'
 import {
   Table,
   TableBody,
@@ -52,8 +52,16 @@ export function TrazabilidadPage() {
     verificarIntegridad,
     estadoCadena,
     aislarCorrupcion,
+    verificacionSegmento,
+    verificandoSegmento,
+    errorSegmento,
+    verificarPorDispositivo,
   } = useTrazabilidad()
   const [pagina, setPagina] = useState(1)
+  // HU-37: verificación acotada a un dispositivo y periodo.
+  const [segmentoDeviceId, setSegmentoDeviceId] = useState('')
+  const [segmentoDesde, setSegmentoDesde] = useState('')
+  const [segmentoHasta, setSegmentoHasta] = useState('')
   // La lista completa puede tener miles de filas; solo se pinta la página
   // visible. Al cambiar la lista (filtro nuevo) se vuelve a la primera.
   const visibles = useMemo(
@@ -186,6 +194,114 @@ export function TrazabilidadPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* ── HU-37: verificación acotada a un dispositivo y periodo ──── */}
+      <Card className="mb-5 animate-rise">
+        <CardContent className="p-4">
+          <p className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+            <ScanSearch className="size-4 text-pine-600" aria-hidden />
+            {t('trazabilidad.verificarSegmento')}
+          </p>
+          <form
+            className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_1fr_1fr_auto]"
+            onSubmit={(e) => {
+              e.preventDefault()
+              if (!segmentoDeviceId || !segmentoDesde || !segmentoHasta) return
+              void verificarPorDispositivo(
+                segmentoDeviceId,
+                new Date(segmentoDesde).toISOString(),
+                new Date(segmentoHasta).toISOString(),
+              )
+            }}
+          >
+            <div>
+              <Label htmlFor="seg-device">{t('historial.dispositivo')}</Label>
+              <Input
+                id="seg-device"
+                value={segmentoDeviceId}
+                onChange={(e) => setSegmentoDeviceId(e.target.value)}
+                placeholder="FARM-01-CDL"
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="seg-desde">{t('historial.desde')}</Label>
+              <Input
+                id="seg-desde"
+                type="datetime-local"
+                value={segmentoDesde}
+                onChange={(e) => setSegmentoDesde(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="seg-hasta">{t('historial.hasta')}</Label>
+              <Input
+                id="seg-hasta"
+                type="datetime-local"
+                value={segmentoHasta}
+                onChange={(e) => setSegmentoHasta(e.target.value)}
+                required
+              />
+            </div>
+            <div className="flex items-end">
+              <Button type="submit" disabled={verificandoSegmento} className="w-full sm:w-auto">
+                {verificandoSegmento ? t('trazabilidad.verificando') : t('trazabilidad.verificarSegmentoBoton')}
+              </Button>
+            </div>
+          </form>
+
+          {errorSegmento && (
+            <p role="alert" className="mt-3 rounded-(--radius-field) bg-clay-100 px-3 py-2 text-[13px] text-clay-700">
+              {errorSegmento === 'rango_invalido'
+                ? t('trazabilidad.rangoInvalido')
+                : t('comunes.error')}
+            </p>
+          )}
+
+          {verificacionSegmento && (
+            <div
+              role="status"
+              className={cn(
+                'mt-3 rounded-(--radius-field) border p-3',
+                verificacionSegmento.integra
+                  ? 'border-pine-200 bg-pine-100/60'
+                  : 'border-clay-100 bg-clay-100/60',
+              )}
+            >
+              <p
+                className={cn(
+                  'text-sm font-semibold',
+                  verificacionSegmento.integra ? 'text-pine-700' : 'text-clay-700',
+                )}
+              >
+                {verificacionSegmento.integra
+                  ? t('trazabilidad.segmentoIntegro')
+                  : t('trazabilidad.segmentoRoto')}
+              </p>
+              <p className="text-[13px] text-muted">
+                {t('trazabilidad.segmentoResumen', {
+                  n: verificacionSegmento.total_bloques_verificados,
+                  device: verificacionSegmento.device_id,
+                })}
+              </p>
+              {verificacionSegmento.registros_del_dispositivo.length > 0 && (
+                <ul className="mt-2 max-h-48 space-y-1 overflow-y-auto text-[13px]">
+                  {verificacionSegmento.registros_del_dispositivo.map((r) => (
+                    <li key={r.id} className="flex items-center justify-between gap-2">
+                      <span className="nums text-muted">{fechaHora(r.timestamp)}</span>
+                      <span className="font-medium">{r.tipo_evento}</span>
+                      <Badge variant={r.integro ? 'ok' : 'critical'}>
+                        {r.integro ? t('trazabilidad.integro') : t('trazabilidad.corrupto')}
+                      </Badge>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* ── Filtro por tipo ─────────────────────────────────── */}
       <div className="mb-4 max-w-64 animate-rise">

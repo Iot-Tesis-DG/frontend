@@ -25,4 +25,6 @@ export interface AccionCorrectiva {
   usuario_id: string
   descripcion: string
   created_at: string | null
+  // HU-28: referencia a la acción que esta rectifica (null si es la original).
+  corrige_accion_id: string | null
 }

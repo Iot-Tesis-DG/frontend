@@ -188,9 +188,39 @@ export const demoAdapter: AxiosAdapter = async (config) => {
       usuario_id: 'u-01',
       descripcion: String(cuerpoJson(config).descripcion ?? ''),
       created_at: new Date().toISOString(),
+      corrige_accion_id: null,
     }
     estadoDemo.acciones.push(nueva)
     return responder(config, nueva, 201)
+  }
+
+  // HU-23 criterio 4: cronología de atención de una alerta, de solo lectura.
+  const listarAcciones = /^\/api\/alertas\/([^/]+)\/acciones-correctivas$/.exec(url)
+  if (metodo === 'get' && listarAcciones) {
+    const alerta = estadoDemo.alertas.find((a) => a.id === listarAcciones[1])
+    if (!alerta) fallar(config, 404, 'Alerta no encontrada')
+    const propias = estadoDemo.acciones
+      .filter((a) => a.alert_id === listarAcciones[1])
+      .sort((a, b) => new Date(a.created_at ?? 0).getTime() - new Date(b.created_at ?? 0).getTime())
+    return responder(config, propias)
+  }
+
+  // HU-28: corrige una justificación creando un nuevo evento que referencia
+  // a la anterior, sin sobrescribirla.
+  const rectificar = /^\/api\/alertas\/acciones-correctivas\/([^/]+)\/rectificar$/.exec(url)
+  if (metodo === 'post' && rectificar) {
+    const anterior = estadoDemo.acciones.find((a) => a.id === rectificar[1])
+    if (!anterior) fallar(config, 404, 'Acción correctiva no encontrada')
+    const rectificacion = {
+      id: `ac-vivo-${Date.now()}`,
+      alert_id: anterior.alert_id,
+      usuario_id: 'u-01',
+      descripcion: String(cuerpoJson(config).descripcion ?? ''),
+      created_at: new Date().toISOString(),
+      corrige_accion_id: anterior.id,
+    }
+    estadoDemo.acciones.push(rectificacion)
+    return responder(config, rectificacion, 201)
   }
 
   /* ── Trazabilidad ───────────────────────────────────────────── */
